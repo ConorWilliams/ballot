@@ -6,7 +6,7 @@ project(
     ChuBallotMCR
     VERSION 0.1
     DESCRIPTION "Code for the Churchill MCR Postgrad room-ballot"
-    LANGUAGES CXX 
+    LANGUAGES CXX
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -28,7 +28,6 @@ include(cmake/CPM.cmake)
 include(cmake/tools.cmake)
 
 # Fetch all dependcies using CPM
-
 
 CPMAddPackage(
     NAME structopt
@@ -59,7 +58,6 @@ CPMAddPackage(
             "FORMAT_CHECK_CMAKE ON"
 )
 
-
 CPMAddPackage(
     NAME pcg-cpp
     GITHUB_REPOSITORY imneme/pcg-cpp
@@ -72,11 +70,15 @@ if(pcg-cpp_ADDED)
     target_compile_features(pcg-cpp INTERFACE cxx_std_17)
 endif()
 
+CPMAddPackage(
+    NAME LAPJV
+    GITHUB_REPOSITORY ConorWilliams/LAPJV-algorithm-c
+    GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
+)
+
 # ---- Create executable ----
 
-set(sources
-    "src/main.cpp"
-)
+set(sources "src/main.cpp")
 
 add_executable(ballot ${sources})
 
@@ -84,9 +86,7 @@ target_compile_features(ballot PUBLIC cxx_std_17)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(
-    ballot PUBLIC Eigen structopt pcg-cpp
-)
+target_link_libraries(ballot PUBLIC Eigen structopt pcg-cpp LAPJV)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
