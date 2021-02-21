@@ -3,19 +3,8 @@
 #include <vector>
 
 #include "clargs.hpp"
+#include "read.hpp"
 #include "wrap_lapjv.hpp"
-
-struct Person {
-    std::string name;
-
-    Person(std::string_view name) : name(name) {}
-};
-
-struct Room {
-    std::string name;
-
-    Room(std::string_view name) : name(name) {}
-};
 
 int main(int argc, char *argv[]) {
     Parse<Args> clargs{argc, argv};

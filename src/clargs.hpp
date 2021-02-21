@@ -14,9 +14,10 @@ template <typename T> struct Parse : T {
     }
 };
 
-// This apps command line args struct
+// This apps command line augment's struct
 struct Args {
-    std::string file;
+    std::string people_csv;
+    std::string room_csv;
 };
 
-STRUCTOPT(Args, file);
+STRUCTOPT(Args, people_csv, room_csv);

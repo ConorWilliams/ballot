@@ -20,6 +20,9 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     )
 endif()
 
+# System packages
+find_package(Threads)
+
 # ---- Add dependencies via CPM ----
 
 # see https://github.com/TheLartians/CPM.cmake for more info
@@ -30,6 +33,14 @@ include(cmake/tools.cmake)
 # Fetch all dependcies using CPM
 
 CPMAddPackage(
+    NAME Format.cmake
+    VERSION 1.6
+    GITHUB_REPOSITORY TheLartians/Format.cmake
+    OPTIONS # enable cmake formatting (optional)
+            "FORMAT_CHECK_CMAKE ON"
+)
+
+CPMAddPackage(
     NAME structopt
     GITHUB_REPOSITORY p-ranav/structopt
     # Version 0.1.1 commit
@@ -37,25 +48,9 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-    NAME Eigen
-    GITLAB_REPOSITORY libeigen/eigen
-    # Need version 3.4 no yet released
-    GIT_TAG 0784d9f87b6602160e8f3e3d507d69999b92d539
-    # Eigen's CMakelists are not intended for library use
-    DOWNLOAD_ONLY YES
-)
-
-if(Eigen_ADDED)
-    add_library(Eigen INTERFACE IMPORTED)
-    target_include_directories(Eigen INTERFACE ${Eigen_SOURCE_DIR})
-endif()
-
-CPMAddPackage(
-    NAME Format.cmake
-    VERSION 1.6
-    GITHUB_REPOSITORY TheLartians/Format.cmake
-    OPTIONS # enable cmake formatting (optional)
-            "FORMAT_CHECK_CMAKE ON"
+    NAME LAPJV
+    GITHUB_REPOSITORY ConorWilliams/LAPJV-algorithm-c
+    GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
 )
 
 CPMAddPackage(
@@ -71,10 +66,17 @@ if(pcg-cpp_ADDED)
 endif()
 
 CPMAddPackage(
-    NAME LAPJV
-    GITHUB_REPOSITORY ConorWilliams/LAPJV-algorithm-c
-    GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
+    NAME fast-csv
+    GITHUB_REPOSITORY ben-strasser/fast-cpp-csv-parser
+    GIT_TAG 75600d0b77448e6c410893830df0aec1dbacf8e3
 )
+
+if(fast-csv_ADDED)
+    add_library(fast-csv INTERFACE IMPORTED)
+    target_include_directories(fast-csv INTERFACE ${fast-csv_SOURCE_DIR})
+    target_compile_features(fast-csv INTERFACE cxx_std_11)
+    target_link_libraries(fast-csv INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 # ---- Create executable ----
 
@@ -86,7 +88,7 @@ target_compile_features(ballot PUBLIC cxx_std_17)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(ballot PUBLIC Eigen structopt pcg-cpp LAPJV)
+target_link_libraries(ballot PUBLIC structopt pcg-cpp LAPJV fast-csv)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
