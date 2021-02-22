@@ -4,6 +4,7 @@
 #include <string>
 
 #include "structopt/app.hpp"
+#include "structopt/sub_command.hpp"
 
 // Helper class for exception handling upon CLI parsing
 template <typename T> struct Parse : T {
@@ -16,10 +17,31 @@ template <typename T> struct Parse : T {
 
 // This apps command line augment's struct
 struct Args {
-    std::string people_csv;                             // File containing people data
-    std::optional<std::string> outfile = "ballot.csv";  // Write results here
-    std::optional<bool> gen_secrets = false;            // Generate secrets so ballot can be checked
-    std::optional<std::string> anon_csv = "anon.csv";   // Write anonymised results here
+    struct Run : structopt::sub_command {
+        std::string people;                                           // File with people data
+        std::optional<std::string> out_secret = "secret_ballot.csv";  // Write results here
+        std::optional<std::string> out_anon = "anon_people.csv";  // Write anonymised results here
+    };
+
+    struct Check : structopt::sub_command {
+        std::string people;                             // File containing people data
+        std::optional<std::string> out = "ballot.csv";  // Write results here
+    };
+
+    // Sub-commands
+    Run run;
+    Check check;
+
+    // Symmetric access
+    std::string const &people() const {
+        if (run.has_value()) {
+            return run.people;
+        } else {
+            return check.people;
+        }
+    }
 };
 
-STRUCTOPT(Args, people_csv, outfile, gen_secrets, anon_csv);
+STRUCTOPT(Args::Run, people, out_secret, out_anon);
+STRUCTOPT(Args::Check, people, out);
+STRUCTOPT(Args, run, check);

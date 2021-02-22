@@ -22,10 +22,16 @@ struct Person {
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(Args const&);
 
+void shuffle(std::vector<Person>&);
+
 void write_anonymised(std::vector<Person> const&, Args const&);
 
 // Find all the rooms the people have selected
 std::vector<std::string> find_rooms(std::vector<Person> const&);
+
+void write_results(std::vector<std::optional<Person>> const&,
+                   std::vector<std::optional<std::string>> const&,
+                   Args const&);
 
 // Convert vector of objects to vector of optional objects and pad with nullopt such that lengths is
 // greater than or equal to len

@@ -1,8 +1,6 @@
 
 #include "ballot.hpp"
 
-#include <bits/c++config.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
@@ -43,7 +41,7 @@ std::vector<Person> parse_people(Args const& args) {
                  csv2::trim_policy::trim_whitespace>
         csv;
 
-    csv.mmap(args.people_csv);  // Throws if no file
+    csv.mmap(args.people());  // Throws if no file
 
     std::vector<Person> people;
     std::string buff;
@@ -71,9 +69,7 @@ std::vector<Person> parse_people(Args const& args) {
             }
         }
 
-        if (*args.gen_secrets == true) {
-            picosha2::hash256_hex_string(p.name + random_string(), p.secret_name);
-        }
+        picosha2::hash256_hex_string(p.name + random_string(), p.secret_name);
 
         people.push_back(std::move(p));
     }
@@ -95,20 +91,62 @@ std::vector<Person> parse_people(Args const& args) {
     return people;
 }
 
+void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), rng); }
+
+// Write out people with anonymised names to .csv that can be used to verify results
 void write_anonymised(std::vector<Person> const& people, Args const& args) {
-    if (*args.gen_secrets == true) {
-        std::ofstream fstream(*args.anon_csv);
+    std::ofstream fstream(*args.run.out_anon);
 
-        fstream << "name,crsid,priority";
+    fstream << "name,crsid,priority";
 
-        for (size_t i = 0; i < people[0].pref.size(); i++) {
-            fstream << ",choice " << i;
+    for (size_t i = 0; i < people[0].pref.size(); i++) {
+        fstream << ",choice " << i + 1;
+    }
+
+    for (auto&& p : people) {
+        fstream << '\n' << p.secret_name << ",," << p.priority;
+        for (auto&& room : p.pref) {
+            fstream << ',' << room;
         }
+    }
+}
 
-        for (auto&& p : people) {
-            fstream << '\n' << p.secret_name << ",," << p.priority;
-            for (auto&& room : p.pref) {
-                fstream << ',' << room;
+void write_results(std::vector<std::optional<Person>> const& people,
+                   std::vector<std::optional<std::string>> const& rooms,
+                   Args const& args) {
+    //
+    if (args.run.has_value()) {
+        std::ofstream fstream(*args.run.out_secret);
+
+        fstream << "name,crsid,room,secret_name";
+
+        for (std::size_t i = 0; i < people.size(); i++) {
+            if (people[i]) {
+                fstream << '\n' << people[i]->name << ',' << people[i]->crsid;
+
+                if (rooms[i]) {
+                    fstream << ',' << *rooms[i];
+                } else {
+                    fstream << ',' << "REJECTED";
+                }
+
+                fstream << ',' << people[i]->secret_name;
+            }
+        }
+    } else {
+        std::ofstream fstream(*args.check.out);
+
+        fstream << "secret_name,room";
+
+        for (std::size_t i = 0; i < people.size(); i++) {
+            if (people[i]) {
+                fstream << '\n' << people[i]->name;
+
+                if (rooms[i]) {
+                    fstream << ',' << *rooms[i];
+                } else {
+                    fstream << ',' << "REJECTED";
+                }
             }
         }
     }

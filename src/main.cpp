@@ -1,5 +1,3 @@
-#include <bits/c++config.h>
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -14,34 +12,19 @@ int main(int argc, char* argv[]) {
     auto people = parse_people(args);
     auto rooms = find_rooms(people);
 
-    write_anonymised(people, args);
+    shuffle(people);
+
+    if (args.run.has_value()) {
+        write_anonymised(people, args);
+    }
 
     std::size_t n = std::max(people.size(), rooms.size());
 
     auto pp = pad_null(std::move(people), n);
     auto rr = pad_null(std::move(rooms), n);
 
-    for (auto&& elem : rr) {
-        if (elem) {
-            std::cout << *elem << '\n';
-        } else {
-            std::cout << "empty" << '\n';
-        }
-    }
+    write_results(pp, rr, args);
 
-    for (auto&& p : pp) {
-        if (p) {
-            std::cout << p->name << ' ' << p->crsid << ' ' << p->priority << ' ' << p->secret_name;
-            for (auto&& h : p->pref) {
-                std::cout << ' ' << h;
-            }
-            std::cout << '\n';
-        } else {
-            std::cout << "empty" << '\n';
-        }
-    }
-
-    std::cout << "Cost=" << 1 << "\n";
     std::cout << "Working\n";
 
     return 0;
