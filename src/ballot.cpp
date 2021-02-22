@@ -1,11 +1,15 @@
 
-#include "person.hpp"
+#include "ballot.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <iterator>
+#include <map>
+#include <optional>
 #include <random>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "clargs.hpp"
@@ -16,14 +20,12 @@ namespace {
 
 constexpr char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-std::random_device rng{};
-std::uniform_int_distribution<> dist{0, sizeof(charset) - 1};
+std::random_device rng;
 
 // Generate a random string of characters for salting
 std::string random_string(std::size_t len = 32) {
-    auto randchar = [&]() -> char { return charset[dist(rng)]; };
     std::string out;
-    std::generate_n(std::back_inserter(out), len, randchar);
+    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), len, rng);
     return out;
 }
 
@@ -67,15 +69,21 @@ std::vector<Person> parse_people(Args const& args) {
         people.push_back(std::move(p));
     }
 
-    for (auto&& p : people) {
-        std::cout << p.name << ' ' << p.crsid << ' ' << p.priority << ' ' << p.secret_name;
-        for (auto&& h : p.pref)
+    return people;
+}
 
-        {
-            std::cout << ' ' << h;
+// Find all the rooms the people have selected,
+std::vector<std::string> find_rooms(std::vector<Person> const& people) {
+    // Using set (vs unordered_set) as it guarantees iteration order.
+    std::set<std::string_view> rooms;
+
+    for (auto const& person : people) {
+        for (std::string_view room : person.pref) {
+            if (!rooms.count(room)) {
+                rooms.insert(room);
+            }
         }
-        std::cout << '\n';
     }
 
-    return people;
+    return {rooms.begin(), rooms.end()};
 }

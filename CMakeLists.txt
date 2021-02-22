@@ -78,9 +78,6 @@ if(PicoSHA2_ADDED)
     target_compile_features(PicoSHA2 INTERFACE cxx_std_11)
 endif()
 
-
-
-
 CPMAddPackage(
     NAME csv2
     GITHUB_REPOSITORY p-ranav/csv2
@@ -88,11 +85,9 @@ CPMAddPackage(
 )
 
 
-
-
 # ---- Create executable ----
 
-set(sources "src/main.cpp" "src/person.cpp")
+set(sources "src/main.cpp" "src/ballot.cpp")
 
 add_executable(ballot ${sources})
 
