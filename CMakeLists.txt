@@ -20,8 +20,6 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     )
 endif()
 
-
-
 # ---- Add dependencies via CPM ----
 
 # see https://github.com/TheLartians/CPM.cmake for more info
@@ -68,10 +66,6 @@ if(PicoSHA2_ADDED)
     target_include_directories(PicoSHA2 INTERFACE ${PicoSHA2_SOURCE_DIR})
     target_compile_features(PicoSHA2 INTERFACE cxx_std_11)
 endif()
-
-
-
-
 
 # ---- Create executable ----
 

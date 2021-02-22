@@ -4,7 +4,7 @@
 
 #include "ballot.hpp"
 #include "cost.hpp"
-#include "wrap_lapjv.hpp"
+#include "lapjv.hpp"
 
 auto load_and_pad(Args const& args) {
     auto people = parse_people(args);
