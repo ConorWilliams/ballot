@@ -25,16 +25,18 @@ inline double cost_function(std::optional<Person> const& p, std::optional<std::s
         }
 
         // Cost of assigning person to room they do NOT want, justification:
-        // Bigger than the maximum number expected number of players such that it never occurs
+        //  Bigger than the maximum number expected number of players such that it never occurs
         return 500;
     } else if (p && !r) {
         // Cost of kicking off ballot, justification:
-        // Preferable to assigning to unwanted room and kicking off ballot is about as bad as 3
-        // people getting their last choice
-        return 3;
+        // Preferable (therefore less than) to assigning to unwanted room
+        //  Kicking off ballot should be as close to the cost of getting last choice as this
+        //  disincentivise people putting lots of honey-pot rooms however, this conficts with desire
+        //  to reduce kicking,
+        return 1.5;
     } else if (!p && r) {
         // Cost of assigning empty room, justification:
-        // Agnostic of room -> value irrelevant, therefore set to zero to keep total score small
+        //  Agnostic of room -> value irrelevant, therefore set to zero to keep total score small
         return 0;
     } else {
         // Should never occur

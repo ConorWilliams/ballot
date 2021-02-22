@@ -27,8 +27,8 @@ struct Args {
     };
 
     struct Check : structopt::sub_command {
-        std::string people;                                     // File containing people data
-        std::optional<std::string> out = "checked_ballot.csv";  // Write results here
+        std::string people;       // File containing people data
+        std::string secret_name;  // Name to check against
     };
 
     // Sub-commands
@@ -37,7 +37,7 @@ struct Args {
 };
 
 STRUCTOPT(Args::Run, people, out_secret, out_anon);
-STRUCTOPT(Args::Check, people, out);
+STRUCTOPT(Args::Check, people, secret_name);
 STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,6 +68,10 @@ std::vector<std::string> find_rooms(std::vector<Person> const&);
 void write_results(std::vector<std::optional<Person>> const&,
                    std::vector<std::optional<std::string>> const&,
                    Args const&);
+
+void highlight_results(std::vector<std::optional<Person>> const&,
+                       std::vector<std::optional<std::string>> const&,
+                       Args const&);
 
 // Convert vector of objects to vector of optional objects and pad with null-optional such that
 // out.size() is greater than or equal to len

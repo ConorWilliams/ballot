@@ -120,41 +120,50 @@ void write_results(std::vector<std::optional<Person>> const& people,
                    std::vector<std::optional<std::string>> const& rooms,
                    Args const& args) {
     //
-    if (args.run.has_value()) {
-        std::ofstream fstream(*args.run.out_secret);
 
-        fstream << "name,crsid,room,secret_name";
+    std::ofstream fstream(*args.run.out_secret);
 
-        for (std::size_t i = 0; i < people.size(); i++) {
-            if (people[i]) {
-                fstream << '\n' << people[i]->name << ',' << people[i]->crsid;
+    fstream << "name,crsid,room,secret_name";
 
-                if (rooms[i]) {
-                    fstream << ',' << *rooms[i];
-                } else {
-                    fstream << ',' << "REJECTED";
-                }
+    for (std::size_t i = 0; i < people.size(); i++) {
+        if (people[i]) {
+            fstream << '\n' << people[i]->name << ',' << people[i]->crsid;
 
-                fstream << ',' << people[i]->secret_name;
+            if (rooms[i]) {
+                fstream << ',' << *rooms[i];
+            } else {
+                fstream << ',' << "REJECTED";
             }
-        }
-    } else {
-        std::ofstream fstream(*args.check.out);
 
-        fstream << "secret_name,room";
-
-        for (std::size_t i = 0; i < people.size(); i++) {
-            if (people[i]) {
-                fstream << '\n' << people[i]->name;
-
-                if (rooms[i]) {
-                    fstream << ',' << *rooms[i];
-                } else {
-                    fstream << ',' << "REJECTED";
-                }
-            }
+            fstream << ',' << people[i]->secret_name;
         }
     }
+}
+
+void highlight_results(std::vector<std::optional<Person>> const& people,
+                       std::vector<std::optional<std::string>> const& rooms,
+                       Args const& args) {
+    for (std::size_t i = 0; i < people.size(); i++) {
+        if (people[i] && people[i]->name == args.check.secret_name) {
+            std::cout << "Your choices:";
+            for (auto&& room : people[i]->pref) {
+                std::cout << ' ' << room;
+            }
+            std::cout << "\nYou got room: ";
+
+            if (rooms[i]) {
+                std::cout << *rooms[i];
+            } else {
+                std::cout << "REJECTED";
+            }
+
+            std::cout << '\n';
+
+            return;
+        }
+    }
+
+    throw std::invalid_argument("Secret name not in list of people");
 }
 
 // Find all the rooms people have selected

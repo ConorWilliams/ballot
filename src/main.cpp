@@ -30,9 +30,12 @@ int main(int argc, char* argv[]) {
 
     double sum = linear_assignment(people, rooms, &cost_function);
 
-    write_results(people, rooms, args);
-
-    std::cout << "Minimal cost = " << sum << std::endl;
+    if (args.run.has_value()) {
+        write_results(people, rooms, args);
+        std::cout << "Minimal cost = " << sum << std::endl;
+    } else {
+        highlight_results(people, rooms, args);
+    }
 
     return 0;
 }
