@@ -17,7 +17,8 @@ template <typename T> struct Parse : T {
 // This apps command line augment's struct
 struct Args {
     std::string people_csv;
-    std::string room_csv;
+
+    std::optional<bool> secrets = false;
 };
 
-STRUCTOPT(Args, people_csv, room_csv);
+STRUCTOPT(Args, people_csv, secrets);

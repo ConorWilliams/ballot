@@ -20,8 +20,7 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     )
 endif()
 
-# System packages
-find_package(Threads)
+
 
 # ---- Add dependencies via CPM ----
 
@@ -65,18 +64,31 @@ if(pcg-cpp_ADDED)
     target_compile_features(pcg-cpp INTERFACE cxx_std_17)
 endif()
 
+
+
 CPMAddPackage(
-    NAME fast-csv
-    GITHUB_REPOSITORY ben-strasser/fast-cpp-csv-parser
-    GIT_TAG 75600d0b77448e6c410893830df0aec1dbacf8e3
+    NAME PicoSHA2
+    GITHUB_REPOSITORY okdshin/PicoSHA2
+    VERSION 1.0.0
 )
 
-if(fast-csv_ADDED)
-    add_library(fast-csv INTERFACE IMPORTED)
-    target_include_directories(fast-csv INTERFACE ${fast-csv_SOURCE_DIR})
-    target_compile_features(fast-csv INTERFACE cxx_std_11)
-    target_link_libraries(fast-csv INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+if(PicoSHA2_ADDED)
+    add_library(PicoSHA2 INTERFACE IMPORTED)
+    target_include_directories(PicoSHA2 INTERFACE ${PicoSHA2_SOURCE_DIR})
+    target_compile_features(PicoSHA2 INTERFACE cxx_std_11)
 endif()
+
+
+
+
+CPMAddPackage(
+    NAME csv2
+    GITHUB_REPOSITORY p-ranav/csv2
+    GIT_TAG a20992f7a1b75215609037c4cc66f690e8691aab
+)
+
+
+
 
 # ---- Create executable ----
 
@@ -88,7 +100,7 @@ target_compile_features(ballot PUBLIC cxx_std_17)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(ballot PUBLIC structopt pcg-cpp LAPJV fast-csv)
+target_link_libraries(ballot PUBLIC structopt pcg-cpp LAPJV PicoSHA2 csv2)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
