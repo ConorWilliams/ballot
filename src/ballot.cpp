@@ -11,7 +11,6 @@
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "csv2/reader.hpp"
@@ -33,7 +32,7 @@ std::string random_string(std::size_t len = 32) {
 }  // namespace
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
-std::vector<Person> parse_people(Args const& args) {
+std::vector<RealPerson> parse_people(Args const& args) {
     // These are all defaults, included for expressiveness
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
@@ -47,11 +46,11 @@ std::vector<Person> parse_people(Args const& args) {
         csv.mmap(args.check.people);
     }
 
-    std::vector<Person> people;
+    std::vector<RealPerson> people;
     std::string buff;
 
     for (const auto row : csv) {
-        Person p;
+        RealPerson p;
         int count = 0;
         for (const auto cell : row) {
             switch (count++) {
@@ -96,10 +95,26 @@ std::vector<Person> parse_people(Args const& args) {
     return people;
 }
 
-void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), rng); }
+// Find all the rooms people have selected
+std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
+    // Using set (vs unordered_set) as it guarantees iteration order.
+    std::set<RealRoom> rooms;
+
+    for (auto const& person : people) {
+        for (auto const& room : person.pref) {
+            if (!rooms.count(room)) {
+                rooms.insert(room);
+            }
+        }
+    }
+
+    return {rooms.begin(), rooms.end()};
+}
+
+void shuffle(std::vector<RealPerson>& people) { std::shuffle(people.begin(), people.end(), rng); }
 
 // Write out people with anonymised names to .csv that can be used to verify results
-void write_anonymised(std::vector<Person> const& people, Args const& args) {
+void write_anonymised(std::vector<RealPerson> const& people, Args const& args) {
     std::ofstream fstream(*args.run.out_anon);
 
     fstream << "name,crsid,priority";
@@ -164,20 +179,4 @@ void highlight_results(std::vector<std::optional<Person>> const& people,
     }
 
     throw std::invalid_argument("Secret name not in list of people");
-}
-
-// Find all the rooms people have selected
-std::vector<std::string> find_rooms(std::vector<Person> const& people) {
-    // Using set (vs unordered_set) as it guarantees iteration order.
-    std::set<std::string_view> rooms;
-
-    for (auto const& person : people) {
-        for (std::string_view room : person.pref) {
-            if (!rooms.count(room)) {
-                rooms.insert(room);
-            }
-        }
-    }
-
-    return {rooms.begin(), rooms.end()};
 }

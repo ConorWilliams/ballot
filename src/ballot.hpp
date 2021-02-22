@@ -1,9 +1,8 @@
 #pragma once
 
-#include <bits/c++config.h>
-
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "structopt/app.hpp"
@@ -46,28 +45,43 @@ STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct Person {
+using RealRoom = std::string;
+
+struct NullRoom {};
+
+using Room = std::variant<NullRoom, RealRoom>;
+
+struct NullPerson {};
+
+struct AntiPerson {};
+
+struct RealPerson {
     std::string name{};
     std::string crsid{};
     std::string secret_name{};
 
-    int priority;
+    std::vector<RealRoom> pref{};
 
-    std::vector<std::string> pref{};
-
-  private:
-    friend std::vector<Person> parse_people(Args const& args);
+    int priority = 1;
 };
 
+using Person = std::variant<NullPerson, RealPerson, AntiPerson>;
+
+// Helper type for the std::visit
+template <class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+/////////////////////////////////////////////////////////////////////////////
+
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
-std::vector<Person> parse_people(Args const&);
-
-void shuffle(std::vector<Person>&);
-
-void write_anonymised(std::vector<Person> const&, Args const&);
+std::vector<RealPerson> parse_people(Args const&);
 
 // Find all the rooms the people have selected
-std::vector<std::string> find_rooms(std::vector<Person> const&);
+std::vector<RealRoom> find_rooms(std::vector<RealPerson> const&);
+
+void shuffle(std::vector<RealPerson>&);
+
+void write_anonymised(std::vector<RealPerson> const&, Args const&);
 
 void write_results(std::vector<std::optional<Person>> const&,
                    std::vector<std::optional<std::string>> const&,
