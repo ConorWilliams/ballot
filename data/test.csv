@@ -1,3 +1,3 @@
 name    ,crsid ,priority ,choice 1 ,choice 2 ,choice 3
-rebecca ,crsid ,0        ,1        ,l        ,b
-conor   ,crsid ,0        ,a        ,k        ,b
+rebecca ,crsid ,0        ,a        ,b        ,c
+conor   ,crsid ,0        ,a        ,b        ,c
