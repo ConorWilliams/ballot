@@ -25,21 +25,25 @@ inline double cost_function(std::optional<Person> const& p, std::optional<std::s
         }
 
         // Cost of assigning person to room they do NOT want, justification:
-        //  Bigger than the maximum number expected number of players such that it never occurs
-        return 500;
+        //     Bigger than the maximum expected number of players such that it never occurs.
+        return 1000;
     } else if (p && !r) {
         // Cost of kicking off ballot, justification:
-        // Preferable (therefore less than) to assigning to unwanted room
-        //  Kicking off ballot should be as close to the cost of getting last choice as this
-        //  disincentivise people putting lots of honey-pot rooms however, this conficts with desire
-        //  to reduce kicking,
+        //     Preferable (therefore less than) to assigning to unwanted room.
+        //     Kicking off ballot should be as close to the cost of getting last choice as this
+        //     disincentivise people putting lots of honey-pot rooms however, this conflicts with
+        //     desire to reduce kicking.
         return 1.5;
     } else if (!p && r) {
         // Cost of assigning empty room, justification:
-        //  Agnostic of room -> value irrelevant, therefore set to zero to keep total score small
+        //     Agnostic of room -> value irrelevant, therefore zero to keep total score small.
+        //     Value must me less than
         return 0;
     } else {
-        // Should never occur
-        throw std::runtime_error("Both people and rooms are padded!");
+        // Cost of binding fake person to empty room, justification:
+        //     Should only occur if limiting total number of rooms by introducing additional fake
+        //     people and rooms therefore, cost must be very high as in this scenario we want all
+        //     excess fake people to bind to real rooms thus this should never preferable.
+        return 1000;
     }
 }

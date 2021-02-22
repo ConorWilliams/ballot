@@ -1,4 +1,7 @@
+#include <bits/c++config.h>
+
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -15,7 +18,20 @@ auto load_and_pad(Args const& args) {
         write_anonymised(people, args);  // Can be re-consumed in check mode
     }
 
-    std::size_t n = std::max(people.size(), rooms.size());
+    std::size_t const n = [&] {
+        std::size_t n = 0;
+
+        if (auto max = args.run.has_value() ? args.run.max_rooms : args.check.max_rooms) {
+            if (rooms.size() > max) {
+                n += rooms.size() - *max;
+            }
+        }
+
+        return std::max(people.size(), rooms.size() + n);
+    }();
+
+    std::cout << people.size() << "->" << n << '\n';
+    std::cout << rooms.size() << "->" << n << '\n';
 
     return std::pair{
         pad_null(std::move(people), n),

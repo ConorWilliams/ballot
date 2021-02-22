@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bits/c++config.h>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -21,14 +23,16 @@ template <typename T> struct Parse : T {
 // This apps command line augment's struct
 struct Args {
     struct Run : structopt::sub_command {
-        std::string people;                                           // File with people data
+        std::string people;                                           // File containing people data
         std::optional<std::string> out_secret = "secret_ballot.csv";  // Write ballot results here
         std::optional<std::string> out_anon = "public_ballot.csv";    // Write anonymised input here
+        std::optional<std::size_t> max_rooms;                         // Maximum num rooms to assign
     };
 
     struct Check : structopt::sub_command {
-        std::string people;       // File containing people data
-        std::string secret_name;  // Name to check against
+        std::string people;                    // File containing people data
+        std::string secret_name;               // Name to check against
+        std::optional<std::size_t> max_rooms;  // Maximum number of rooms to assign
     };
 
     // Sub-commands
@@ -36,8 +40,8 @@ struct Args {
     Run run;
 };
 
-STRUCTOPT(Args::Run, people, out_secret, out_anon);
-STRUCTOPT(Args::Check, people, secret_name);
+STRUCTOPT(Args::Run, people, out_secret, out_anon, max_rooms);
+STRUCTOPT(Args::Check, people, secret_name, max_rooms);
 STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
