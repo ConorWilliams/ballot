@@ -4,7 +4,43 @@
 #include <string>
 #include <vector>
 
-#include "cli_args.hpp"
+#include "structopt/app.hpp"
+#include "structopt/sub_command.hpp"
+
+/////////////////////////////////////////////////////////////////////////////
+
+// Helper class for exception handling upon CLI parsing
+template <typename T> struct Parse : T {
+    Parse(int argc, char* argv[]) try : T(structopt::app("ballot").parse<T>(argc, argv)) {
+    } catch (structopt::exception& e) {
+        std::cout << e.what() << "\n";
+        std::cout << e.help();
+    }
+};
+
+// This apps command line augment's struct
+struct Args {
+    struct Run : structopt::sub_command {
+        std::string people;                                           // File with people data
+        std::optional<std::string> out_secret = "secret_ballot.csv";  // Write ballot results here
+        std::optional<std::string> out_anon = "public_ballot.csv";    // Write anonymised input here
+    };
+
+    struct Check : structopt::sub_command {
+        std::string people;                                     // File containing people data
+        std::optional<std::string> out = "checked_ballot.csv";  // Write results here
+    };
+
+    // Sub-commands
+    Check check;
+    Run run;
+};
+
+STRUCTOPT(Args::Run, people, out_secret, out_anon);
+STRUCTOPT(Args::Check, people, out);
+STRUCTOPT(Args, run, check);
+
+/////////////////////////////////////////////////////////////////////////////
 
 struct Person {
     std::string name{};
@@ -33,8 +69,8 @@ void write_results(std::vector<std::optional<Person>> const&,
                    std::vector<std::optional<std::string>> const&,
                    Args const&);
 
-// Convert vector of objects to vector of optional objects and pad with nullopt such that lengths is
-// greater than or equal to len
+// Convert vector of objects to vector of optional objects and pad with null-optional such that
+// out.size() is greater than or equal to len
 template <class T> std::vector<std::optional<T>> pad_null(std::vector<T>&& in, std::size_t len) {
     std::vector<std::optional<T>> out{std::move_iterator(in.begin()), std::move_iterator(in.end())};
 

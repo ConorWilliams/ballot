@@ -14,17 +14,16 @@
 #include <string_view>
 #include <vector>
 
-#include "cli_args.hpp"
 #include "csv2/reader.hpp"
 #include "picosha2.h"
 
-namespace {
+namespace {  // Like static
 
 constexpr char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 std::random_device rng;
 
-// Generate a random string of characters for salting
+// Generate a random string of characters for salting names before hash
 std::string random_string(std::size_t len = 32) {
     std::string out;
     std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), len, rng);
@@ -35,13 +34,18 @@ std::string random_string(std::size_t len = 32) {
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(Args const& args) {
+    // These are all defaults, included for expressiveness
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
                  csv2::first_row_is_header<true>,
                  csv2::trim_policy::trim_whitespace>
         csv;
 
-    csv.mmap(args.people());  // Throws if no file
+    if (args.run.has_value()) {
+        csv.mmap(args.run.people);  // Throws if no file
+    } else {
+        csv.mmap(args.check.people);
+    }
 
     std::vector<Person> people;
     std::string buff;
@@ -101,7 +105,7 @@ void write_anonymised(std::vector<Person> const& people, Args const& args) {
     fstream << "name,crsid,priority";
 
     for (size_t i = 0; i < people[0].pref.size(); i++) {
-        fstream << ",choice " << i + 1;
+        fstream << ",C" << i + 1;
     }
 
     for (auto&& p : people) {
@@ -153,7 +157,7 @@ void write_results(std::vector<std::optional<Person>> const& people,
     }
 }
 
-// Find all the rooms the people have selected,
+// Find all the rooms people have selected
 std::vector<std::string> find_rooms(std::vector<Person> const& people) {
     // Using set (vs unordered_set) as it guarantees iteration order.
     std::set<std::string_view> rooms;

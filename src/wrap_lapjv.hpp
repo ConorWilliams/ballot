@@ -7,7 +7,15 @@
 
 #include "lap.h"
 
-// Provide type && memory safe interface to lapjv linear assignment optimiser
+/*
+ *  Provide type && memory safe interface to LAPJV linear assignment optimiser.
+ *  Reorders "tasks" such that agent[i] is assigned to task[i].
+ *  Finds the global (but possibly degenerate) minima of:
+ *
+ *      sum_i f(agent[i], task[i])
+ *
+ *  with f the supplied cost function.
+ */
 template <class Agent, class Task, class Cost>
 std::enable_if_t<std::is_invocable_r_v<double, Cost, Agent const &, Task const &>, double>
 linear_assignment(std::vector<Agent> const &agents, std::vector<Task> &tasks, Cost &&f) {
@@ -36,7 +44,7 @@ linear_assignment(std::vector<Agent> const &agents, std::vector<Task> &tasks, Co
     cost *u = new cost[dim];
     cost *v = new cost[dim];
 
-    // Assign costs to the costMatrix
+    // Assign costs to the cost_matrix
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
             cost_matrix[i][j] = std::invoke(f, agents[i], tasks[j]);
