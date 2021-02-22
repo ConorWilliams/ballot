@@ -12,8 +12,8 @@ auto load_and_pad(Args const& args) {
     auto rooms = find_rooms(people);
 
     if (args.run.has_value()) {
-        shuffle(people);
-        write_anonymised(people, args);
+        shuffle(people);                 // Must randomise to break ties fairly
+        write_anonymised(people, args);  // Can be re-consumed in check mode
     }
 
     std::size_t n = std::max(people.size(), rooms.size());
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     auto [people, rooms] = load_and_pad(args);
 
-    double sum = linear_assignment(people, rooms, cost_function);
+    double sum = linear_assignment(people, rooms, &cost_function);
 
     write_results(people, rooms, args);
 
