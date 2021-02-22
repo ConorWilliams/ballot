@@ -1,6 +1,7 @@
 # Custom
 build
 compile_commands.json
+data
 .clangd
 .vscode
 

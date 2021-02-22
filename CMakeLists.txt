@@ -52,9 +52,11 @@ CPMAddPackage(
     GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
 )
 
-
-
-
+CPMAddPackage(
+    NAME csv2
+    GITHUB_REPOSITORY p-ranav/csv2
+    GIT_TAG a20992f7a1b75215609037c4cc66f690e8691aab
+)
 
 CPMAddPackage(
     NAME PicoSHA2
@@ -68,11 +70,7 @@ if(PicoSHA2_ADDED)
 endif()
 
 
-CPMAddPackage(
-    NAME csv2
-    GITHUB_REPOSITORY p-ranav/csv2
-    GIT_TAG a20992f7a1b75215609037c4cc66f690e8691aab
-)
+
 
 
 # ---- Create executable ----

@@ -84,7 +84,8 @@ std::vector<Person> parse_people(Args const& args) {
 
     for (auto const& p : people) {
         if (p.pref.size() != k) {
-            throw std::runtime_error("Not all people have made the same number of choices");
+            throw std::runtime_error(
+                "Not all people have made the same number of choices, maybe a trailing newline");
         }
     }
 
