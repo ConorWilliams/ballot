@@ -47,7 +47,7 @@ CPMAddPackage(
 CPMAddPackage(
     NAME LAPJV
     GITHUB_REPOSITORY ConorWilliams/LAPJV-algorithm-c
-    GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
+    GIT_TAG 0c6833fc1d2012e3095610cf870b53e62794d204
 )
 
 CPMAddPackage(
@@ -77,7 +77,7 @@ target_compile_features(ballot PUBLIC cxx_std_17)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(ballot PUBLIC structopt LAPJV PicoSHA2 csv2)
+target_link_libraries(ballot PRIVATE structopt LAPJV PicoSHA2 csv2)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
@@ -85,3 +85,4 @@ target_include_directories(
 )
 
 # ///
+
