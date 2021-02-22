@@ -52,17 +52,7 @@ CPMAddPackage(
     GIT_TAG 234cbe0bbc35e9f31792ca34567050910a9e215d
 )
 
-CPMAddPackage(
-    NAME pcg-cpp
-    GITHUB_REPOSITORY imneme/pcg-cpp
-    VERSION 0.98.1
-)
 
-if(pcg-cpp_ADDED)
-    add_library(pcg-cpp INTERFACE IMPORTED)
-    target_include_directories(pcg-cpp INTERFACE ${pcg-cpp_SOURCE_DIR}/include)
-    target_compile_features(pcg-cpp INTERFACE cxx_std_17)
-endif()
 
 
 
@@ -71,12 +61,12 @@ CPMAddPackage(
     GITHUB_REPOSITORY okdshin/PicoSHA2
     VERSION 1.0.0
 )
-
 if(PicoSHA2_ADDED)
     add_library(PicoSHA2 INTERFACE IMPORTED)
     target_include_directories(PicoSHA2 INTERFACE ${PicoSHA2_SOURCE_DIR})
     target_compile_features(PicoSHA2 INTERFACE cxx_std_11)
 endif()
+
 
 CPMAddPackage(
     NAME csv2
@@ -95,7 +85,7 @@ target_compile_features(ballot PUBLIC cxx_std_17)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(ballot PUBLIC structopt pcg-cpp LAPJV PicoSHA2 csv2)
+target_link_libraries(ballot PUBLIC structopt LAPJV PicoSHA2 csv2)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>

@@ -5,14 +5,16 @@
 #include <vector>
 
 #include "ballot.hpp"
-#include "clargs.hpp"
+#include "cli_args.hpp"
 #include "wrap_lapjv.hpp"
 
 int main(int argc, char* argv[]) {
-    Parse<Args> clargs{argc, argv};
+    Parse<Args> args{argc, argv};
 
-    auto people = parse_people(clargs);
+    auto people = parse_people(args);
     auto rooms = find_rooms(people);
+
+    write_anonymised(people, args);
 
     std::size_t n = std::max(people.size(), rooms.size());
 

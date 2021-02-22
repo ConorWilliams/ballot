@@ -1,18 +1,22 @@
 
 #include "ballot.hpp"
 
+#include <bits/c++config.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <iterator>
-#include <map>
 #include <optional>
 #include <random>
+#include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "clargs.hpp"
+#include "cli_args.hpp"
 #include "csv2/reader.hpp"
 #include "picosha2.h"
 
@@ -33,7 +37,12 @@ std::string random_string(std::size_t len = 32) {
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(Args const& args) {
-    csv2::Reader csv;
+    csv2::Reader<csv2::delimiter<','>,
+                 csv2::quote_character<'"'>,
+                 csv2::first_row_is_header<true>,
+                 csv2::trim_policy::trim_whitespace>
+        csv;
+
     csv.mmap(args.people_csv);  // Throws if no file
 
     std::vector<Person> people;
@@ -62,14 +71,47 @@ std::vector<Person> parse_people(Args const& args) {
             }
         }
 
-        if (args.secrets) {
+        if (*args.gen_secrets == true) {
             picosha2::hash256_hex_string(p.name + random_string(), p.secret_name);
         }
 
         people.push_back(std::move(p));
     }
 
+    // Check all people have made the same number of choices and that there is at least one person
+
+    if (people.empty()) {
+        throw std::runtime_error("No people in csv");
+    }
+
+    std::size_t const k = people[0].pref.size();
+
+    for (auto const& p : people) {
+        if (p.pref.size() != k) {
+            throw std::runtime_error("Not all people have made the same number of choices");
+        }
+    }
+
     return people;
+}
+
+void write_anonymised(std::vector<Person> const& people, Args const& args) {
+    if (*args.gen_secrets == true) {
+        std::ofstream fstream(*args.anon_csv);
+
+        fstream << "name,crsid,priority";
+
+        for (size_t i = 0; i < people[0].pref.size(); i++) {
+            fstream << ",choice " << i;
+        }
+
+        for (auto&& p : people) {
+            fstream << '\n' << p.secret_name << ",," << p.priority;
+            for (auto&& room : p.pref) {
+                fstream << ',' << room;
+            }
+        }
+    }
 }
 
 // Find all the rooms the people have selected,

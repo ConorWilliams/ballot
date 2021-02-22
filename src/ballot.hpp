@@ -1,12 +1,10 @@
 #pragma once
 
-#include <bits/c++config.h>
-
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "clargs.hpp"
+#include "cli_args.hpp"
 
 struct Person {
     std::string name{};
@@ -23,6 +21,8 @@ struct Person {
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(Args const&);
+
+void write_anonymised(std::vector<Person> const&, Args const&);
 
 // Find all the rooms the people have selected
 std::vector<std::string> find_rooms(std::vector<Person> const&);

@@ -16,9 +16,10 @@ template <typename T> struct Parse : T {
 
 // This apps command line augment's struct
 struct Args {
-    std::string people_csv;
-
-    std::optional<bool> secrets = false;
+    std::string people_csv;                             // File containing people data
+    std::optional<std::string> outfile = "ballot.csv";  // Write results here
+    std::optional<bool> gen_secrets = false;            // Generate secrets so ballot can be checked
+    std::optional<std::string> anon_csv = "anon.csv";   // Write anonymised results here
 };
 
-STRUCTOPT(Args, people_csv, secrets);
+STRUCTOPT(Args, people_csv, outfile, gen_secrets, anon_csv);
