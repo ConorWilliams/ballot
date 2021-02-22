@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 
+#include "ballot.hpp"
 #include "clargs.hpp"
-#include "person.hpp"
 #include "wrap_lapjv.hpp"
 
 int main(int argc, char *argv[]) {
