@@ -92,7 +92,7 @@ CPMAddPackage(
 
 # ---- Create executable ----
 
-set(sources "src/main.cpp")
+set(sources "src/main.cpp" "src/person.cpp")
 
 add_executable(ballot ${sources})
 

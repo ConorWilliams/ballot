@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]) {
     Parse<Args> clargs{argc, argv};
 
-    read_people(clargs);
+    parse_people(clargs);
 
     std::cout << "Cost=" << 1 << "\n";
     std::cout << "Working\n";
