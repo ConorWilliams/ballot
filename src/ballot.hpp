@@ -16,12 +16,12 @@ struct Args {
     std::string people;
 
     std::optional<std::string> out_secret = "secret_ballot.csv";  // Write ballot results here
-    std::optional<std::string> out_anon = "public_ballot.csv";    // Write anonymised input here
+    std::optional<std::string> out_anon = "public_ballot.json";   // Write anonymised input here
     std::optional<std::string> check_name;                        // Verifies results for this name
     std::optional<std::size_t> max_rooms;                         // Maximum number of rooms to use
     std::optional<std::vector<std::string>> hostels;              // List of hostels
 
-    Args() = default;  // Required by structopt
+    Args() = default;  // Required by structopt, cereal
 
     // Exceptions handled in constructor
     Args(int argc, char* argv[]) try : Args(structopt::app("Ballot").parse<Args>(argc, argv)) {
@@ -56,6 +56,15 @@ struct RealPerson {
     std::vector<RealRoom> pref{};
 
     int priority = 1;
+
+    template <class Archive> void save(Archive& archive) const {
+        archive(secret_name, pref, priority);
+    }
+
+    template <class Archive> void load(Archive& archive) {
+        // Swap name and secret name
+        archive(name, pref, priority);
+    }
 };
 
 using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
@@ -63,7 +72,7 @@ using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
 namespace impl {
 
 template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
-template <class... Ts> overload(Ts...)->overload<Ts...>;
+template <class... Ts> overload(Ts...) -> overload<Ts...>;
 
 }  // namespace impl
 

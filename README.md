@@ -1,6 +1,6 @@
 # MCR room ballot
 
-Welcome to the Churchill MCR Postgrad room ballot code please read on to find out how to run the ballot code if you are the computing officer this year **and** how you can verify that the room ballot was run honestly this year!
+Welcome to the Churchill MCR postgraduate-room-ballot code, please read on to find out how to: run the ballot code if you are the computing officer this year **and** how you can verify that the room ballot was run honestly this year!
 
 ## Installation
 To build the codebase you will need a c++ compiler supporting c++20, git, make, and a version of cmake greater than or equal to 3.14. Then follow the standard procedure:
@@ -33,6 +33,12 @@ would preferentially fill all rooms beginning with the letters "RR" or "CJ".
 Finally you can control the total number of allocated rooms using the `-m` or `--max-rooms` options.
 
 ## Verifying the ballot
+
+To verify the MCR computing officer hasn't fiddled your position you need a copy of the `secret_ballot.csv` file they generated and and your "secret_name" which you should have received securely. Now run:
+
+`.ballot secret_ballot.csv -c YOUR_SECRET_NAME ...`
+
+where the ...
 
 ## Details about the ballot
  

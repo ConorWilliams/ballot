@@ -1,18 +1,39 @@
 #include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "ballot.hpp"
+#include "cereal/archives/json.hpp"
+#include "cereal/types/optional.hpp"
+#include "cereal/types/string.hpp"
+#include "cereal/types/vector.hpp"
 #include "cost.hpp"
 #include "lapjv.hpp"
 
 int main(int argc, char* argv[]) {
     Args args{argc, argv};
 
-    std::vector<RealPerson> r_people = parse_people(args);
-    std::vector<RealRoom> r_rooms = find_rooms(r_people);
+    std::vector<RealPerson> r_people;
+    std::vector<RealRoom> r_rooms;
+
+    if (args.check_name) {
+        std::ifstream file(args.people);
+        cereal::JSONInputArchive archive(file);
+        archive(args.max_rooms, args.hostels, r_people, r_rooms);
+    } else {
+        r_people = parse_people(args);
+        r_rooms = find_rooms(r_people);
+
+        shuffle(r_people);  // Must randomise for fair ties break AND anonymity
+
+        // Output for future checking
+        std::ofstream file(*args.out_anon);
+        cereal::JSONOutputArchive archive(file);
+        archive(args.max_rooms, args.hostels, r_people, r_rooms);
+    }
 
     std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
     std::cout << "-- Between them they selected " << r_rooms.size() << " rooms, ";
@@ -36,11 +57,6 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "of which " << count << " are hostels.\n";
-
-    if (!args.check_name) {
-        shuffle(r_people);                 // Must randomise for fair ties break AND anonymity
-        write_anonymised(r_people, args);  // Can be re-consumed in check mode
-    }
 
     // Convert to variants
     std::vector people = convert_vector<Person>(std::move(r_people));

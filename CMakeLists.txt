@@ -30,6 +30,13 @@ include(cmake/tools.cmake)
 # Fetch all dependcies using CPM
 
 CPMAddPackage(
+    NAME cereal
+    VERSION 1.3.0
+    GITHUB_REPOSITORY USCiLab/cereal
+    OPTIONS "SKIP_PORTABILITY_TEST ON" "JUST_INSTALL_CEREAL ON"
+)
+
+CPMAddPackage(
     NAME Format.cmake
     VERSION 1.6
     GITHUB_REPOSITORY TheLartians/Format.cmake
@@ -73,11 +80,11 @@ set(sources "src/main.cpp" "src/ballot.cpp")
 
 add_executable(ballot ${sources})
 
-target_compile_features(ballot PUBLIC cxx_std_20)
+target_compile_features(ballot PRIVATE cxx_std_20)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 
-target_link_libraries(ballot PRIVATE structopt LAPJV PicoSHA2 csv2)
+target_link_libraries(ballot PRIVATE structopt LAPJV PicoSHA2 csv2 cereal)
 
 target_include_directories(
     ballot PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
