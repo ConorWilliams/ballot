@@ -1,7 +1,3 @@
-
-
-#include <bits/c++config.h>
-
 #include <algorithm>
 #include <cassert>
 #include <iostream>

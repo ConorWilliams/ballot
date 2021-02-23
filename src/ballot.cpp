@@ -1,8 +1,6 @@
 
 #include "ballot.hpp"
 
-#include <bits/c++config.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
