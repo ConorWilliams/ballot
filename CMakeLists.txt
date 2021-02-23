@@ -73,7 +73,7 @@ set(sources "src/main.cpp" "src/ballot.cpp")
 
 add_executable(ballot ${sources})
 
-target_compile_features(ballot PUBLIC cxx_std_17)
+target_compile_features(ballot PUBLIC cxx_std_20)
 
 target_compile_options(ballot PRIVATE -Wall -Wextra -Wpedantic -Wdisabled-optimization)
 

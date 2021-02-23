@@ -11,6 +11,9 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "csv2/reader.hpp"
@@ -29,6 +32,19 @@ std::string random_string(std::size_t len = 32) {
     return out;
 }
 
+namespace impl {
+
+template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
+template <class... Ts> overload(Ts...) -> overload<Ts...>;
+
+}  // namespace impl
+
+template <class... Vs> decltype(auto) match(Vs&&... vs) {
+    return [... vs = std::forward<Vs>(vs)]<class... Lam>(Lam && ... lam) mutable->decltype(auto) {
+        return std::visit(impl::overload{std::forward<Lam>(lam)...}, std::forward<Vs>(vs)...);
+    };
+}
+
 }  // namespace
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
@@ -40,11 +56,7 @@ std::vector<RealPerson> parse_people(Args const& args) {
                  csv2::trim_policy::trim_whitespace>
         csv;
 
-    if (args.run.has_value()) {
-        csv.mmap(args.run.people);  // Throws if no file
-    } else {
-        csv.mmap(args.check.people);
-    }
+    csv.mmap(args.people);  // Throws if no file
 
     std::vector<RealPerson> people;
     std::string buff;
@@ -115,7 +127,7 @@ void shuffle(std::vector<RealPerson>& people) { std::shuffle(people.begin(), peo
 
 // Write out people with anonymised names to .csv that can be used to verify results
 void write_anonymised(std::vector<RealPerson> const& people, Args const& args) {
-    std::ofstream fstream(*args.run.out_anon);
+    std::ofstream fstream(*args.out_anon);
 
     fstream << "name,crsid,priority";
 
@@ -131,52 +143,51 @@ void write_anonymised(std::vector<RealPerson> const& people, Args const& args) {
     }
 }
 
-void write_results(std::vector<std::optional<Person>> const& people,
-                   std::vector<std::optional<std::string>> const& rooms,
+void write_results(std::vector<Person> const& people,
+                   std::vector<Room> const& rooms,
                    Args const& args) {
     //
 
-    std::ofstream fstream(*args.run.out_secret);
+    std::ofstream fstream(*args.out_secret);
 
     fstream << "name,crsid,room,secret_name";
 
     for (std::size_t i = 0; i < people.size(); i++) {
-        if (people[i]) {
-            fstream << '\n' << people[i]->name << ',' << people[i]->crsid;
-
-            if (rooms[i]) {
-                fstream << ',' << *rooms[i];
-            } else {
-                fstream << ',' << "REJECTED";
-            }
-
-            fstream << ',' << people[i]->secret_name;
-        }
+        match(people[i], rooms[i])(
+            [&](RealPerson const& p, RealRoom const& r) {
+                fstream << '\n' << p.name << ',' << p.crsid;
+                fstream << ',' << r << ',' << p.secret_name;
+            },
+            [&](RealPerson const& p, Kicked const&) {
+                fstream << '\n' << p.name << ',' << p.crsid;
+                fstream << ",KICKED," << p.secret_name;
+            },
+            [](auto&&...) {});
     }
 }
 
-void highlight_results(std::vector<std::optional<Person>> const& people,
-                       std::vector<std::optional<std::string>> const& rooms,
+void highlight_results(std::vector<Person> const& people,
+                       std::vector<Room> const& rooms,
                        Args const& args) {
-    for (std::size_t i = 0; i < people.size(); i++) {
-        if (people[i] && people[i]->name == args.check.secret_name) {
-            std::cout << "Your choices:";
-            for (auto&& room : people[i]->pref) {
-                std::cout << ' ' << room;
-            }
-            std::cout << "\nYou got room: ";
+    // for (std::size_t i = 0; i < people.size(); i++) {
+    //     if (people[i] && people[i]->name == args.check.secret_name) {
+    //         std::cout << "Your choices:";
+    //         for (auto&& room : people[i]->pref) {
+    //             std::cout << ' ' << room;
+    //         }
+    //         std::cout << "\nYou got room: ";
 
-            if (rooms[i]) {
-                std::cout << *rooms[i];
-            } else {
-                std::cout << "REJECTED";
-            }
+    //         if (rooms[i]) {
+    //             std::cout << *rooms[i];
+    //         } else {
+    //             std::cout << "REJECTED";
+    //         }
 
-            std::cout << '\n';
+    //         std::cout << '\n';
 
-            return;
-        }
-    }
+    //         return;
+    //     }
+    // }
 
-    throw std::invalid_argument("Secret name not in list of people");
+    // throw std::invalid_argument("Secret name not in list of people");
 }
