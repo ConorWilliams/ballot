@@ -19,6 +19,7 @@ struct Args {
     std::optional<std::string> out_anon = "public_ballot.csv";    // Write anonymised input here
     std::optional<std::string> check_name;                        // Verifies results for this name
     std::optional<std::size_t> max_rooms;                         // Maximum number of rooms to use
+    std::optional<std::string> hostels; // List of hostels
 
     Args() = default;  // Required by structopt
 
@@ -37,7 +38,9 @@ STRUCTOPT(Args, people, check_name, max_rooms, out_secret, out_anon);
 
 using RealRoom = std::string;
 
-struct Kicked {};
+struct Kicked {
+    friend std::ostream& operator<<(std::ostream& os, Kicked const&) { return os << "KICKED"; }
+};
 
 using Room = std::variant<Kicked, RealRoom>;
 
@@ -56,6 +59,20 @@ struct RealPerson {
 };
 
 using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
+
+namespace impl {
+
+template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
+template <class... Ts> overload(Ts...) -> overload<Ts...>;
+
+}  // namespace impl
+
+// Helper function for working with std::visit/variants
+template <class... Vs> decltype(auto) match(Vs&&... vs) {
+    return [... vs = std::forward<Vs>(vs)]<class... Lam>(Lam && ... lam) mutable->decltype(auto) {
+        return std::visit(impl::overload{std::forward<Lam>(lam)...}, std::forward<Vs>(vs)...);
+    };
+}
 
 /////////////////////////////////////////////////////////////////////////////
 

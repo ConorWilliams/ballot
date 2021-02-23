@@ -1,7 +1,7 @@
 
 
-#include <bits/c++config.h>
-
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,11 +10,16 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
+// TODO : add header in formatted out put and include priority
+
 int main(int argc, char* argv[]) {
     Args args{argc, argv};
 
     std::vector<RealPerson> r_people = parse_people(args);
     std::vector<RealRoom> r_rooms = find_rooms(r_people);
+
+    std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
+    std::cout << "-- Between them they selected " << r_rooms.size() << " rooms.\n";
 
     if (!args.check_name) {
         shuffle(r_people);                 // Must randomise to break ties fairly
@@ -29,6 +34,8 @@ int main(int argc, char* argv[]) {
 
     // Need to add an anti-person for each room we wish to remove from the ballot
     if (args.max_rooms && rooms.size() > *args.max_rooms) {
+        std::cout << "-- You want to limit the number of rooms to " << *args.max_rooms;
+        std::cout << " so we are adding " << rooms.size() - *args.max_rooms << " anti-people.\n";
         people.resize(people.size() + rooms.size() - *args.max_rooms, AntiPerson{});
     }
 
@@ -39,14 +46,15 @@ int main(int argc, char* argv[]) {
     assert(people.size() <= rooms.size());
     people.resize(rooms.size(), NullPerson{});
 
+    std::cout << "-- Running minimisation...\n";
     double sum = linear_assignment(people, rooms, &cost_function);
 
     if (!args.check_name) {
         // TODO : sort alphabetically
         write_results(people, rooms, args);
-        std::cout << "Minimal cost = " << sum << std::endl;
+        std::cout << "-- The minimised final cost was " << sum << std::endl;
     } else {
-        // highlight_results(people, rooms, args);
+        highlight_results(people, rooms, args);
     }
 
     return 0;

@@ -3,7 +3,7 @@
 Welcome to the Churchill MCR Postgrad room ballot code please read on to find out how to run the ballot code if you are the computing officer this year **and** how you can verify that the room ballot was run honestly this year!
 
 ## Installation
-To build the codebase you will need a c++ compiler supporting c++17, git, make, and a version of cmake greater than or equal to 3.14. Then follow the standard procedure:
+To build the codebase you will need a c++ compiler supporting c++20, git, make, and a version of cmake greater than or equal to 3.14. Then follow the standard procedure:
 
 
 ```zsh

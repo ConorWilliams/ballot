@@ -1,6 +1,8 @@
 
 #include "ballot.hpp"
 
+#include <bits/c++config.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
@@ -9,6 +11,7 @@
 #include <optional>
 #include <random>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -16,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "csv2/parameters.hpp"
 #include "csv2/reader.hpp"
 #include "picosha2.h"
 
@@ -32,36 +36,22 @@ std::string random_string(std::size_t len = 32) {
     return out;
 }
 
-namespace impl {
-
-template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
-template <class... Ts> overload(Ts...) -> overload<Ts...>;
-
-}  // namespace impl
-
-template <class... Vs> decltype(auto) match(Vs&&... vs) {
-    return [... vs = std::forward<Vs>(vs)]<class... Lam>(Lam && ... lam) mutable->decltype(auto) {
-        return std::visit(impl::overload{std::forward<Lam>(lam)...}, std::forward<Vs>(vs)...);
-    };
-}
-
 }  // namespace
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<RealPerson> parse_people(Args const& args) {
-    // These are all defaults, included for expressiveness
+    // Have to manually include carriage return ('\r')
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
                  csv2::first_row_is_header<true>,
-                 csv2::trim_policy::trim_whitespace>
+                 csv2::trim_policy::trim_characters<' ', '\r', '\n'>>
         csv;
 
     csv.mmap(args.people);  // Throws if no file
 
     std::vector<RealPerson> people;
-    std::string buff;
 
-    for (const auto row : csv) {
+    for (std::string buff; const auto row : csv) {
         RealPerson p;
         int count = 0;
         for (const auto cell : row) {
@@ -102,7 +92,16 @@ std::vector<RealPerson> parse_people(Args const& args) {
             throw std::runtime_error(
                 "Not all people have made the same number of choices, maybe a trailing newline");
         }
+        for (auto&& h : p.pref) {
+            for (auto&& c : h) {
+                if (std::find(std::begin(charset), std::end(charset), c) == std::end(charset)) {
+                    throw std::runtime_error("Unexpected characters in input file");
+                }
+            }
+        }
     }
+
+    std::cout << "-- Everyone made " << k << " choices.\n";
 
     return people;
 }
@@ -148,46 +147,73 @@ void write_results(std::vector<Person> const& people,
                    Args const& args) {
     //
 
-    std::ofstream fstream(*args.out_secret);
-
-    fstream << "name,crsid,room,secret_name";
+    std::set<std::string> ordered_results;
 
     for (std::size_t i = 0; i < people.size(); i++) {
         match(people[i], rooms[i])(
             [&](RealPerson const& p, RealRoom const& r) {
-                fstream << '\n' << p.name << ',' << p.crsid;
-                fstream << ',' << r << ',' << p.secret_name;
+                std::size_t const k = [&] {
+                    for (std::size_t i = 0; i < p.pref.size(); i++) {
+                        if (p.pref[i] == r) {
+                            return i;
+                        }
+                    }
+                    throw std::runtime_error("Person allocated to a room they didn't want!");
+                }();
+
+                std::stringstream stream;
+
+                stream << '\n' << p.name << ',' << p.crsid << ',' << p.priority;
+                stream << ',' << "#" << k + 1 << ',' << r << ',' << p.secret_name;
+
+                ordered_results.insert(stream.str());
             },
-            [&](RealPerson const& p, Kicked const&) {
-                fstream << '\n' << p.name << ',' << p.crsid;
-                fstream << ",KICKED," << p.secret_name;
+            [&](RealPerson const& p, Kicked const& r) {
+                std::stringstream stream;
+
+                stream << '\n' << p.name << ',' << p.crsid << ',' << p.priority;
+                stream << ",," << r << ',' << p.secret_name;
+
+                ordered_results.insert(stream.str());
             },
             [](auto&&...) {});
+    }
+
+    std::ofstream fstream(*args.out_secret);
+
+    fstream << "name,crsid,priority,choice,room,secret_name";
+
+    for (auto const& r : ordered_results) {
+        fstream << r;
     }
 }
 
 void highlight_results(std::vector<Person> const& people,
                        std::vector<Room> const& rooms,
                        Args const& args) {
-    // for (std::size_t i = 0; i < people.size(); i++) {
-    //     if (people[i] && people[i]->name == args.check.secret_name) {
-    //         std::cout << "Your choices:";
-    //         for (auto&& room : people[i]->pref) {
-    //             std::cout << ' ' << room;
-    //         }
-    //         std::cout << "\nYou got room: ";
+    for (std::size_t i = 0; i < people.size(); i++) {
+        auto found = match(people[i], rooms[i])(
+            [&](RealPerson const& p, auto const& r) {
+                if (p.name == args.check_name) {
+                    std::cout << "-- Your choices:";
 
-    //         if (rooms[i]) {
-    //             std::cout << *rooms[i];
-    //         } else {
-    //             std::cout << "REJECTED";
-    //         }
+                    for (auto&& room : p.pref) {
+                        std::cout << ' ' << room;
+                    }
 
-    //         std::cout << '\n';
+                    std::cout << "\n-- You got room: " << r << '\n';
 
-    //         return;
-    //     }
-    // }
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            [](auto&&...) { return false; });
 
-    // throw std::invalid_argument("Secret name not in list of people");
+        if (found) {
+            return;
+        }
+    }
+
+    throw std::invalid_argument("Secret name not in list of people");
 }

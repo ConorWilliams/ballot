@@ -9,54 +9,70 @@
 
 #include "ballot.hpp"
 
+inline bool is_hostel(std::string_view str) {
+    using namespace std::literals;
+
+    constexpr std::array hostels{"PS"sv, "OX"sv, "OR"sv, "HR"sv};
+
+    for (auto&& prefix : hostels) {
+        if (str.starts_with(prefix)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline double non_hostel_penalty(std::string_view str) { return is_hostel(str) ? 0 : 0.5; }
+
 inline constexpr double cut = 0.99;
-
-struct CostVisitor {
-    double operator()(RealPerson const&, RealRoom const&) const { return 0; }
-    double operator()(RealPerson const&, Kicked const&) const { return 0; }
-
-    double operator()(AntiPerson const&, RealRoom const&) const { return 0; }
-    double operator()(AntiPerson const&, Kicked const&) const { return 0; }
-
-    double operator()(NullPerson const&, RealRoom const&) const { return 0; }
-    double operator()(NullPerson const&, Kicked const&) const { return 0; }
-};
+inline constexpr double big_num = 500;
 
 // Cost function - overall cost is minimised
 inline double cost_function(Person const& p, Room const& r) {
-    return std::visit(CostVisitor{}, p, r);
-    // if (p && r) {
-    //     // For scaling inverse hyperbolic tangent
-    //     double const coef = atanh(cut) / (std::max(1ul, p->pref.size() - 1));
+    return match(p, r)(
+        [](RealPerson const& p, RealRoom const& r) -> double {
+            // For scaling inverse hyperbolic tangent
+            double const coef = atanh(cut) / (std::max(1ul, p.pref.size() - 1));
 
-    //     for (std::size_t i = 0; i < p->pref.size(); i++) {
-    //         if (p->pref[i] == *r) {
-    //             // Cost of assigning person to room they do want.
-    //             // Function guarantees, 0 < cost <= cut
-    //             return std::tanh(i * coef);
-    //         }
-    //     }
+            for (std::size_t i = 0; i < p.pref.size(); i++) {
+                if (p.pref[i] == r) {
+                    // Cost of assigning person to room they DO want. Hostel rooms are given a
+                    // lower cost. Guarantees, 0 < cost <= cut
+                    return 0.5 * std::tanh(i * coef) + non_hostel_penalty(r);
+                }
+            }
 
-    //     // Cost of assigning person to room they do NOT want, justification:
-    //     //     Bigger than the maximum expected number of players such that it never occurs.
-    //     return 1000;
-    // } else if (p && !r) {
-    //     // Cost of kicking off ballot, justification:
-    //     //     Preferable (therefore less than) to assigning to unwanted room.
-    //     //     Kicking off ballot should be as close to the cost of getting last choice as this
-    //     //     disincentivise people putting lots of honey-pot rooms however, this conflicts with
-    //     //     desire to reduce kicking.
-    //     return 1.5;
-    // } else if (!p && r) {
-    //     // Cost of assigning empty room, justification:
-    //     //     Agnostic of room -> value irrelevant, therefore zero to keep total score small.
-    //     //     Value must me less than
-    //     return 0;
-    // } else {
-    //     // Cost of binding fake person to empty room, justification:
-    //     //     Should only occur if limiting total number of rooms by introducing additional fake
-    //     //     people and rooms therefore, cost must be very high as in this scenario we want all
-    //     //     excess fake people to bind to real rooms thus this should never preferable.
-    //     return 1000;
-    // }
+            // Cost of assigning person to room they DO-NOT want, justification:
+            //     Bigger than the maximum expected number of players such that it never occurs.
+            return big_num;
+        },
+        [](RealPerson const& p, Kicked const&) -> double {
+            // Justification:
+            //     Preferable (therefore less than) cost of assigning to unwanted room.
+            //     Kicking off ballot should be as close to the cost of getting last choice as this
+            //     disincentivise people putting lots of honey-pot rooms however, this conflicts
+            //     with desire to reduce kicking. Functional form gives higher cost to kicking off
+            //     lower priority numbers. Guarantees, 1 < cost <= 2
+            return static_cast<double>(2 + p.priority) / (1 + p.priority);
+        },
+        [](AntiPerson const&, RealRoom const&) -> double {
+            // Justification:
+            //     Should only occur if limiting total number of rooms by introducing additional
+            //     anti-people therefore, cost must be 0 as we want all anti-people to bind to rooms
+            //     over real-people binding to them.
+            return 0;
+        },
+        [](AntiPerson const&, Kicked const&) -> double {
+            // Justification:
+            //     Anti-people must always bind to real-room therefore this must be even more
+            //     impossible than the cost of assigning a person to a room they do not want
+            return 100 * big_num;
+        },
+        [](NullPerson const&, auto const&) -> double {
+            // Justification:
+            //     Agnostic of room/kicked -> value irrelevant, therefore zero to keep total score
+            //     small.
+            return 0;
+        });
 }
