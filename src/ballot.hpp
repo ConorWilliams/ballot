@@ -93,8 +93,6 @@ std::vector<RealRoom> find_rooms(std::vector<RealPerson> const&);
 
 void shuffle(std::vector<RealPerson>&);
 
-void write_anonymised(std::vector<RealPerson> const&, Args const&);
-
 template <typename U, typename T> std::vector<U> convert_vector(std::vector<T>&& tmp) {
     return {std::move_iterator(tmp.begin()), std::move_iterator(tmp.end())};
 }

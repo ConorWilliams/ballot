@@ -121,24 +121,6 @@ std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
 
 void shuffle(std::vector<RealPerson>& people) { std::shuffle(people.begin(), people.end(), rng); }
 
-// Write out people with anonymised names to .csv that can be used to verify results
-void write_anonymised(std::vector<RealPerson> const& people, Args const& args) {
-    std::ofstream fstream(*args.out_anon);
-
-    fstream << "name,crsid,priority";
-
-    for (size_t i = 0; i < people[0].pref.size(); i++) {
-        fstream << ",C" << i + 1;
-    }
-
-    for (auto&& p : people) {
-        fstream << '\n' << p.secret_name << ",," << p.priority;
-        for (auto&& room : p.pref) {
-            fstream << ',' << room;
-        }
-    }
-}
-
 void write_results(std::vector<Person> const& people,
                    std::vector<Room> const& rooms,
                    Args const& args) {
