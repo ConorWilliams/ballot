@@ -1,5 +1,7 @@
 
 
+#include <bits/c++config.h>
+
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -20,6 +22,26 @@ int main(int argc, char* argv[]) {
 
     std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
     std::cout << "-- Between them they selected " << r_rooms.size() << " rooms.\n";
+
+    auto is_hostel = [&](RealRoom const& room) -> bool {
+        if (args.hostels) {
+            for (auto&& prefix : *args.hostels) {
+                if (room.starts_with(prefix)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    std::size_t count = 0;
+    for (auto&& room : r_rooms) {
+        if (is_hostel(room)) {
+            ++count;
+        }
+    }
+
+    std::cout << "-- Of which " << count << " are hostels.\n";
 
     if (!args.check_name) {
         shuffle(r_people);                 // Must randomise to break ties fairly
@@ -47,7 +69,9 @@ int main(int argc, char* argv[]) {
     people.resize(rooms.size(), NullPerson{});
 
     std::cout << "-- Running minimisation...\n";
-    double sum = linear_assignment(people, rooms, &cost_function);
+    double sum = linear_assignment(people, rooms, [&](Person const& p, Room const& r) {
+        return cost_function(p, r, is_hostel);
+    });
 
     if (!args.check_name) {
         // TODO : sort alphabetically

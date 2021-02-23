@@ -9,29 +9,13 @@
 
 #include "ballot.hpp"
 
-inline bool is_hostel(std::string_view str) {
-    using namespace std::literals;
-
-    constexpr std::array hostels{"PS"sv, "OX"sv, "OR"sv, "HR"sv};
-
-    for (auto&& prefix : hostels) {
-        if (str.starts_with(prefix)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-inline double non_hostel_penalty(std::string_view str) { return is_hostel(str) ? 0 : 0.5; }
-
 inline constexpr double cut = 0.99;
-inline constexpr double big_num = 500;
+inline constexpr double big_num = 100;
 
 // Cost function - overall cost is minimised
-inline double cost_function(Person const& p, Room const& r) {
+template <typename F> double cost_function(Person const& p, Room const& r, F&& is_hostel) {
     return match(p, r)(
-        [](RealPerson const& p, RealRoom const& r) -> double {
+        [&](RealPerson const& p, RealRoom const& r) -> double {
             // For scaling inverse hyperbolic tangent
             double const coef = atanh(cut) / (std::max(1ul, p.pref.size() - 1));
 
@@ -39,10 +23,10 @@ inline double cost_function(Person const& p, Room const& r) {
                 if (p.pref[i] == r) {
                     // Cost of assigning person to room they DO want. Hostel rooms are given a
                     // lower cost. Guarantees, 0 < cost <= cut
-                    return 0.5 * std::tanh(i * coef) + non_hostel_penalty(r);
+                    double hostel_penalty = is_hostel(r) ? 0.0 : 0.5;
+                    return 0.5 * std::tanh(i * coef) + hostel_penalty;
                 }
             }
-
             // Cost of assigning person to room they DO-NOT want, justification:
             //     Bigger than the maximum expected number of players such that it never occurs.
             return big_num;
@@ -67,7 +51,7 @@ inline double cost_function(Person const& p, Room const& r) {
             // Justification:
             //     Anti-people must always bind to real-room therefore this must be even more
             //     impossible than the cost of assigning a person to a room they do not want
-            return 100 * big_num;
+            return big_num * big_num;
         },
         [](NullPerson const&, auto const&) -> double {
             // Justification:

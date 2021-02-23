@@ -101,8 +101,6 @@ std::vector<RealPerson> parse_people(Args const& args) {
         }
     }
 
-    std::cout << "-- Everyone made " << k << " choices.\n";
-
     return people;
 }
 

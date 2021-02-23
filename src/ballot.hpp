@@ -19,7 +19,7 @@ struct Args {
     std::optional<std::string> out_anon = "public_ballot.csv";    // Write anonymised input here
     std::optional<std::string> check_name;                        // Verifies results for this name
     std::optional<std::size_t> max_rooms;                         // Maximum number of rooms to use
-    std::optional<std::string> hostels; // List of hostels
+    std::optional<std::vector<std::string>> hostels;              // List of hostels
 
     Args() = default;  // Required by structopt
 
@@ -32,7 +32,7 @@ struct Args {
     }
 };
 
-STRUCTOPT(Args, people, check_name, max_rooms, out_secret, out_anon);
+STRUCTOPT(Args, people, check_name, max_rooms, out_secret, out_anon, hostels);
 
 /////////////////////////////////////////////////////////////////////////////
 
