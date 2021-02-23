@@ -92,6 +92,7 @@ std::vector<RealPerson> parse_people(Args const& args) {
             throw std::runtime_error(
                 "Not all people have made the same number of choices, maybe a trailing newline");
         }
+        // Check for odd characters, could suggest parsing problems
         for (auto&& h : p.pref) {
             for (auto&& c : h) {
                 if (std::find(std::begin(charset), std::end(charset), c) == std::end(charset)) {
@@ -143,13 +144,13 @@ void write_anonymised(std::vector<RealPerson> const& people, Args const& args) {
 void write_results(std::vector<Person> const& people,
                    std::vector<Room> const& rooms,
                    Args const& args) {
-    //
-
+    // Orders results for pretty printing
     std::set<std::string> ordered_results;
 
     for (std::size_t i = 0; i < people.size(); i++) {
         match(people[i], rooms[i])(
             [&](RealPerson const& p, RealRoom const& r) {
+                // Get choice index
                 std::size_t const k = [&] {
                     for (std::size_t i = 0; i < p.pref.size(); i++) {
                         if (p.pref[i] == r) {

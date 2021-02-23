@@ -93,15 +93,3 @@ template <typename U, typename T> std::vector<U> convert_vector(std::vector<T>&&
 void write_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
 
 void highlight_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
-
-// Convert vector of objects to vector of optional objects and pad with null-optional such that
-// out.size() is greater than or equal to len
-template <class T> std::vector<std::optional<T>> pad_null(std::vector<T>&& in, std::size_t len) {
-    std::vector<std::optional<T>> out{std::move_iterator(in.begin()), std::move_iterator(in.end())};
-
-    if (out.size() < len) {
-        out.resize(len, std::nullopt);
-    }
-
-    return out;
-}

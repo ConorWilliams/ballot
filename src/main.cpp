@@ -12,8 +12,6 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
-// TODO : add header in formatted out put and include priority
-
 int main(int argc, char* argv[]) {
     Args args{argc, argv};
 
@@ -21,7 +19,7 @@ int main(int argc, char* argv[]) {
     std::vector<RealRoom> r_rooms = find_rooms(r_people);
 
     std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
-    std::cout << "-- Between them they selected " << r_rooms.size() << " rooms.\n";
+    std::cout << "-- Between them they selected " << r_rooms.size() << " rooms, ";
 
     auto is_hostel = [&](RealRoom const& room) -> bool {
         if (args.hostels) {
@@ -41,7 +39,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    std::cout << "-- Of which " << count << " are hostels.\n";
+    std::cout << "of which " << count << " are hostels.\n";
 
     if (!args.check_name) {
         shuffle(r_people);                 // Must randomise to break ties fairly
@@ -74,9 +72,31 @@ int main(int argc, char* argv[]) {
     });
 
     if (!args.check_name) {
-        // TODO : sort alphabetically
         write_results(people, rooms, args);
-        std::cout << "-- The minimised final cost was " << sum << std::endl;
+
+        std::size_t count_normal = 0;
+        std::size_t count_hostel = 0;
+        std::size_t count_kicked = 0;
+
+        for (std::size_t i = 0; i < people.size(); i++) {
+            match(people[i], rooms[i])(
+                [&](RealPerson&, RealRoom& r) {
+                    if (is_hostel(r)) {
+                        ++count_hostel;
+                    } else {
+                        ++count_normal;
+                    }
+                },
+                [&](RealPerson&, Kicked&) { ++count_kicked; },
+                [&](auto&...) {});
+        }
+
+        std::cout << "-- Minima Breakdown:\n";
+        std::cout << "--    Normal: " << count_normal << '\n';
+        std::cout << "--    Hostel: " << count_hostel << '\n';
+        std::cout << "--    Kicked: " << count_kicked << '\n';
+
+        std::cout << "-- The final cost was " << sum << std::endl;
     } else {
         highlight_results(people, rooms, args);
     }
