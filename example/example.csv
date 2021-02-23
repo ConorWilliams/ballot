@@ -1,0 +1,4 @@
+name    ,crsid ,priority ,c1 ,c2 ,c3 ,c4
+rebecca ,crsid ,1        ,a  ,b  ,c  ,d          
+conor   ,crsid ,1        ,b  ,a  ,d  ,c       
+samin   ,crsid ,1        ,c  ,a  ,b  ,d 

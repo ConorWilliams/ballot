@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     std::cout << "of which " << count << " are hostels.\n";
 
     if (!args.check_name) {
-        shuffle(r_people);                 // Must randomise to break ties fairly
+        shuffle(r_people);                 // Must randomise for fair ties break AND anonymity
         write_anonymised(r_people, args);  // Can be re-consumed in check mode
     }
 
