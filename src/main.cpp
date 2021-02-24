@@ -32,8 +32,6 @@ std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) 
         people = parse_people(args.run.in_people);
         rooms = find_rooms(people);
 
-        find_collusion(people);
-
         shuffle(people);  // Must randomise for fair ties break AND anonymity
 
         // Output for future checking
@@ -46,7 +44,18 @@ std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) 
 }
 
 int main(int argc, char* argv[]) {
+    // Automagically parses
     Args args{argc, argv};
+
+    if (args.cycle.has_value()) {
+        std::vector<RealPerson> people = parse_people(args.cycle.in_people);
+
+        for (auto&& k : args.cycle.ks) {
+            report_k_cycles(k, people);
+        }
+
+        return 0;
+    }
 
     auto [r_people, r_rooms] = load_data(args);
 

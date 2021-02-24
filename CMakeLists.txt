@@ -76,7 +76,7 @@ endif()
 
 # ---- Create executable ----
 
-set(sources "src/main.cpp" "src/ballot.cpp")
+set(sources "src/main.cpp" "src/ballot.cpp" "src/collusion.cpp")
 
 add_executable(ballot ${sources})
 

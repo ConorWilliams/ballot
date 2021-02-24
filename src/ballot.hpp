@@ -36,6 +36,11 @@ struct Args {
         std::optional<std::vector<std::pair<std::string, int>>> test;
     };
 
+    struct Cycle : structopt::sub_command {
+        std::string in_people;
+        std::vector<std::size_t> ks;
+    };
+
     Args() = default;  // Required by structopt, cereal
 
     // Exceptions handled in constructor
@@ -49,11 +54,13 @@ struct Args {
     // Subcommands
     Check check;
     Run run;
+    Cycle cycle;
 };
 
 STRUCTOPT(Args::Check, secret_name, in_public);
 STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels, test);
-STRUCTOPT(Args, run, check);
+STRUCTOPT(Args::Cycle, in_people, ks);
+STRUCTOPT(Args, run, check, cycle);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +96,7 @@ using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
 namespace impl {
 
 template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
-template <class... Ts> overload(Ts...) -> overload<Ts...>;
+template <class... Ts> overload(Ts...)->overload<Ts...>;
 
 }  // namespace impl
 
