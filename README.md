@@ -6,7 +6,10 @@
 
 # MCR Room Ballot
 
-Welcome to the Churchill MCR postgraduate-room-ballot code, please read on to find out how to: run the ballot code if you are the computing officer this year **and** how you can verify that the room ballot was run honestly this year!
+Welcome to the Churchill MCR postgraduate-room-ballot code, please read on to find out how to: 
+
+1. Run the ballot code if you are the computing officer this year.
+2. Verify that the room ballot was run honestly!
 
 ## Installation
 To build the codebase you will need a c++ compiler supporting c++20, git, make, and a version of cmake greater than or equal to 3.14. Then follow the standard procedure:
@@ -56,7 +59,9 @@ If the total number of allocated rooms needs to be limited this is modelled thro
 
 ### The cost function
 
+In summary, the cost function prioritises people getting their first choices but prefers kicking people off the ballot to assigning them to a room they didn't want. Additionally, the cost of kicking people decreases as their priority number increases. This should preferentially kick 3rd/4th year students when rooms are limited.
 
+Finally the cost function ensures all houses designated as "hostels" are preferentially filled.
 
 
  

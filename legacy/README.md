@@ -1,3 +1,3 @@
 # Legacy
 
-This folder contains the old room ballot code, It is here for transparency. 
+This folder contains the old room ballot code, it is here for transparency. 

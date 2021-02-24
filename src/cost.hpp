@@ -15,11 +15,12 @@
 
 #include "ballot.hpp"
 
-inline constexpr double cut = 0.95;
-inline constexpr double big_num = 100;
-
 // Cost function - overall cost is minimised
 template <typename F> double cost_function(Person const& p, Room const& r, F&& is_hostel) {
+    // Constants
+    constexpr double cut = 0.95;
+    constexpr double big_num = 100;
+
     return match(p, r)(
         [&](RealPerson const& p, RealRoom const& r) -> double {
             // For scaling inverse hyperbolic tangent
@@ -41,7 +42,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
             // Justification:
             //     Preferable (therefore less than) cost of assigning to unwanted room.
             //     Kicking off ballot should be as close to the cost of getting last choice as this
-            //     disincentivise people putting lots of honey-pot rooms however, this conflicts
+            //     disincentivizes people choosing lots of honey-pot rooms however, this conflicts
             //     with desire to reduce kicking. Functional form gives higher cost to kicking off
             //     lower priority numbers. Guarantees, 1 < cost <= 2
             return static_cast<double>(2 + p.priority) / (1 + p.priority);
@@ -53,7 +54,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
             //     over real-people binding to them.
             return 0;
         },
-        [](AntiPerson const&, Kicked const&) -> double {
+        [&](AntiPerson const&, Kicked const&) -> double {
             // Justification:
             //     Anti-people must always bind to real-room therefore this must be even more
             //     impossible than the cost of assigning a person to a room they do not want
