@@ -31,8 +31,8 @@ include(cmake/tools.cmake)
 
 CPMAddPackage(
     NAME cereal
-    VERSION 1.3.0
     GITHUB_REPOSITORY USCiLab/cereal
+    GIT_TAG f27c12d491955c94583512603bf32c4568f20929
     OPTIONS "SKIP_PORTABILITY_TEST ON" "JUST_INSTALL_CEREAL ON"
 )
 
