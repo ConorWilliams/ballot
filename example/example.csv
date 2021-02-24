@@ -1,4 +1,3 @@
-name    ,crsid ,priority ,c1 ,c2 ,c3 ,c4
-rebecca ,crsid ,1        ,a  ,b  ,c  ,d          
-conor   ,crsid ,0        ,b  ,a  ,d  ,c       
-samin   ,crsid ,1        ,c  ,a  ,b  ,d 
+Rebecca ,crsid&cam.ac.uk ,1 ,a ,b ,c ,d ,i , k          
+Conor   ,crsid&cam.ac.uk ,0 ,b ,a ,d ,c ,k , i     
+Human   ,crsid&cam.ac.uk ,1 ,c ,a ,b ,d ,i , k 

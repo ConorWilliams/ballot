@@ -11,28 +11,22 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-struct Check : structopt::sub_command {
-    std::string secret_name;                                      // Verifies results for this name
-    std::optional<std::string> in_public = "public_ballot.json";  // Public ballot file
-};
-
-STRUCTOPT(Check, secret_name, in_public);
-
-struct Run : structopt::sub_command {
-    std::string in_people;
-
-    std::optional<std::string> out_secret = "secret_ballot.csv";   // Write ballot results here
-    std::optional<std::string> out_public = "public_ballot.json";  // Write anonymised input here
-    std::optional<std::size_t> max_rooms;                          // Maximum number of rooms to use
-    std::optional<std::vector<std::string>> hostels;               // List of hostels
-};
-
-STRUCTOPT(Run, in_people, out_secret, out_public, max_rooms, hostels);
+// Argument parsing
 
 struct Args {
-    // Subcommands
-    Check check;
-    Run run;
+    struct Check : structopt::sub_command {
+        std::string secret_name;                                      // Verifies this name
+        std::optional<std::string> in_public = "public_ballot.json";  // Public ballot file
+    };
+
+    struct Run : structopt::sub_command {
+        std::string in_people;
+
+        std::optional<std::string> out_secret = "secret_ballot.csv";   // Write results here
+        std::optional<std::string> out_public = "public_ballot.json";  // Write anonymised here
+        std::optional<std::size_t> max_rooms;                          // Maximum num rooms to use
+        std::optional<std::vector<std::string>> hostels;               // List of hostels
+    };
 
     Args() = default;  // Required by structopt, cereal
 
@@ -43,11 +37,19 @@ struct Args {
         std::cout << e.help();
         // Automatically re-throws
     }
+
+    // Subcommands
+    Check check;
+    Run run;
 };
 
+STRUCTOPT(Args::Check, secret_name, in_public);
+STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels);
 STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
+
+// Define People / Room types
 
 using RealRoom = std::string;
 
@@ -76,6 +78,8 @@ struct RealPerson {
 
 using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
 
+/////////////////////////////////////////////////////////////////////////////
+
 namespace impl {
 
 template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
@@ -92,18 +96,16 @@ template <class... Vs> decltype(auto) match(Vs&&... vs) {
 
 /////////////////////////////////////////////////////////////////////////////
 
-// Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<RealPerson> parse_people(Args const&);
 
-// Find all the rooms the people have selected
 std::vector<RealRoom> find_rooms(std::vector<RealPerson> const&);
 
 void shuffle(std::vector<RealPerson>&);
 
-template <typename U, typename T> std::vector<U> convert_vector(std::vector<T>&& tmp) {
-    return {std::move_iterator(tmp.begin()), std::move_iterator(tmp.end())};
-}
-
 void write_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
 
 void highlight_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
+
+template <typename U, typename T> std::vector<U> convert_vector(std::vector<T>&& tmp) {
+    return {std::move_iterator(tmp.begin()), std::move_iterator(tmp.end())};
+}

@@ -1,10 +1,13 @@
 
 #include "ballot.hpp"
 
+#include <bits/c++config.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
 #include <fstream>
+#include <iomanip>
 #include <iterator>
 #include <optional>
 #include <random>
@@ -41,7 +44,7 @@ std::vector<RealPerson> parse_people(Args const& args) {
     // Have to manually include carriage return ('\r')
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
-                 csv2::first_row_is_header<true>,
+                 csv2::first_row_is_header<false>,
                  csv2::trim_policy::trim_characters<' ', '\r', '\n'>>
         csv;
 
@@ -90,14 +93,6 @@ std::vector<RealPerson> parse_people(Args const& args) {
             throw std::runtime_error(
                 "Not all people have made the same number of choices, maybe a trailing newline");
         }
-        // Check for odd characters, could suggest parsing problems
-        for (auto&& h : p.pref) {
-            for (auto&& c : h) {
-                if (std::find(std::begin(charset), std::end(charset), c) == std::end(charset)) {
-                    throw std::runtime_error("Unexpected characters in input file");
-                }
-            }
-        }
     }
 
     return people;
@@ -105,7 +100,8 @@ std::vector<RealPerson> parse_people(Args const& args) {
 
 // Find all the rooms people have selected
 std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
-    // Using set (vs unordered_set) as it guarantees iteration order.
+    // Using set (vs unordered_set) as it guarantees iteration order, otherwise results platform
+    // dependant in-case of degenerate minima.
     std::set<RealRoom> rooms;
 
     for (auto const& person : people) {
@@ -125,7 +121,7 @@ void write_results(std::vector<Person> const& people,
                    std::vector<Room> const& rooms,
                    Args const& args) {
     // Orders results for pretty printing
-    std::set<std::string> ordered_results;
+    std::set<std::pair<std::string, std::string>> ordered_results;
 
     for (std::size_t i = 0; i < people.size(); i++) {
         match(people[i], rooms[i])(
@@ -142,28 +138,41 @@ void write_results(std::vector<Person> const& people,
 
                 std::stringstream stream;
 
-                stream << '\n' << p.name << ',' << p.crsid << ',' << p.priority;
-                stream << ',' << "#" << k + 1 << ',' << r << ',' << p.secret_name;
+                stream << std::left << std::setw(18) << "," + p.crsid;
+                stream << std::left << std::setw(4) << ",P" + std::to_string(p.priority);
+                stream << std::left << std::setw(5) << ",#" + std::to_string(k + 1);
+                stream << std::left << std::setw(5) << "," + r;
+                stream << ',' << p.secret_name;
 
-                ordered_results.insert(stream.str());
+                ordered_results.emplace(p.name, stream.str());
             },
             [&](RealPerson const& p, Kicked const& r) {
                 std::stringstream stream;
 
-                stream << '\n' << p.name << ',' << p.crsid << ',' << p.priority;
+                stream << p.crsid << ',' << p.priority;
                 stream << ",," << r << ',' << p.secret_name;
 
-                ordered_results.insert(stream.str());
+                ordered_results.emplace(p.name, stream.str());
             },
             [](auto&&...) {});
     }
 
+    // Find longest name
+    std::size_t w = [&] {
+        std::size_t w = 0;
+
+        for (auto&& [name, str] : ordered_results) {
+            w = std::max(name.size(), w);
+        }
+
+        return w;
+    }();
+
     std::ofstream fstream(*args.run.out_secret);
 
-    fstream << "name,crsid,priority,choice,room,secret_name";
-
-    for (auto const& r : ordered_results) {
-        fstream << r;
+    for (auto&& [name, str] : ordered_results) {
+        fstream << std::left << std::setw(w + 2) << name;
+        fstream << str << '\n';
     }
 }
 
