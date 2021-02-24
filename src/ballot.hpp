@@ -53,9 +53,7 @@ STRUCTOPT(Args, run, check);
 
 using RealRoom = std::string;
 
-struct Kicked {
-    friend std::ostream& operator<<(std::ostream& os, Kicked const&) { return os << "KICKED"; }
-};
+struct Kicked {};
 
 using Room = std::variant<Kicked, RealRoom>;
 

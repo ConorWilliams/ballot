@@ -18,15 +18,15 @@ You will now have your very own copy of the `ballot` executable!
 
 ## Running the ballot
 
-First up you're your going to need a csv file containing everyone's room preferences see `example/example.csv` to get an idea of the expected format. Now the ballot like:
+First up you're your going to need a csv file containing everyone's room preferences see `example/example.csv` to get an idea of the expected format. Now compile the program and run the ballot like:
 
- `../build/ballot example.csv`
+ `../build/ballot run example.csv`
 
-This will generate two file `public_ballot.csv` and `secret_ballot.csv`. The first can be distributed and used by members of the MCR to anonymously verify the ballot was run fairly. The second contains each persons room assignment and some additional info. You should email each student there result and their "secret_name" (last field in `secret_ballot.csv`).
+This will generate two files `public_ballot.json` and `secret_ballot.csv`. The first can be distributed and used by members of the MCR to anonymously verify the ballot was run fairly. The second contains the room assignments and some additional info. You should email each student their result and their "secret_name" (last field in `secret_ballot.csv`).
 
-If you would like to encourage particular rooms to fill up (the hostels) then you can pass in a list of prefixes. For example: 
+If you would like to encourage particular rooms to fill up (e.g. the hostels) then you can pass in a list of prefixes, for example: 
 
-`../build/ballot example.csv -h RR CJ`
+`../build/ballot run example.csv -h RR CJ`
 
 would preferentially fill all rooms beginning with the letters "RR" or "CJ".
 
@@ -34,11 +34,21 @@ Finally you can control the total number of allocated rooms using the `-m` or `-
 
 ## Verifying the ballot
 
-To verify the MCR computing officer hasn't fiddled your position you need a copy of the `secret_ballot.csv` file they generated and and your "secret_name" which you should have received securely. Now run:
+To verify the MCR computing officer hasn't fiddled your position you need a copy of the `public_ballot.json` file they generated and and your "secret_name" which you should have received securely. Now run:
 
-`.ballot secret_ballot.csv -c YOUR_SECRET_NAME ...`
+`./ballot check YOUR_SECRET_NAME `
 
-where the ...
+where you can supply the optional flag `-i /path/to/public_ballot.json` to specify the location of the public ballot file.
 
 ## Details about the ballot
+
+The ballot code formulates the task as solving the balanced linear [assignment problem](https://en.wikipedia.org/wiki/Assignment_problem). This means we define a [cost function](src/cost.hpp) which assigns a cost to allocating any student to any room. The student-room pairs are then permuted until the global minimum of the cost funtion (summed over all pair) is found. This is done using the [Jonker-Volgenant algorithm](https://doi.org/10.1007/BF02278710). 
+
+In order to allow the possibility that all students get kicked off the ballot the list of rooms is augmented with p (the number of people) "kicked-rooms". To ensure balanced assignment the missing preference-free null-people are appended to the  
+
+### The cost function
+
+
+
+
  

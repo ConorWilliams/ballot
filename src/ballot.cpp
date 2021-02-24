@@ -1,8 +1,6 @@
 
 #include "ballot.hpp"
 
-#include <bits/c++config.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
@@ -141,16 +139,19 @@ void write_results(std::vector<Person> const& people,
                 stream << std::left << std::setw(18) << "," + p.crsid;
                 stream << std::left << std::setw(4) << ",P" + std::to_string(p.priority);
                 stream << std::left << std::setw(5) << ",#" + std::to_string(k + 1);
-                stream << std::left << std::setw(5) << "," + r;
+                stream << std::left << std::setw(6) << "," + r;
                 stream << ',' << p.secret_name;
 
                 ordered_results.emplace(p.name, stream.str());
             },
-            [&](RealPerson const& p, Kicked const& r) {
+            [&](RealPerson const& p, Kicked const&) {
                 std::stringstream stream;
 
-                stream << p.crsid << ',' << p.priority;
-                stream << ",," << r << ',' << p.secret_name;
+                stream << std::left << std::setw(18) << "," + p.crsid;
+                stream << std::left << std::setw(4) << ",P" + std::to_string(p.priority);
+                stream << std::left << std::setw(5) << ",#";
+                stream << std::left << std::setw(6) << ",KICK";
+                stream << ',' << p.secret_name;
 
                 ordered_results.emplace(p.name, stream.str());
             },
@@ -180,8 +181,8 @@ void highlight_results(std::vector<Person> const& people,
                        std::vector<Room> const& rooms,
                        Args const& args) {
     for (std::size_t i = 0; i < people.size(); i++) {
-        auto found = match(people[i], rooms[i])(
-            [&](RealPerson const& p, auto const& r) {
+        auto found = match(people[i])(
+            [&](RealPerson const& p) {
                 if (p.secret_name == args.check.secret_name) {
                     std::cout << "-- Your choices:";
 
@@ -189,19 +190,22 @@ void highlight_results(std::vector<Person> const& people,
                         std::cout << ' ' << room;
                     }
 
-                    std::cout << "\n-- You got room: " << r << '\n';
+                    match(rooms[i])(
+                        [](RealRoom const& r) { std::cout << "\n-- You got room: " << r << '\n'; },
+                        [](Kicked const&) { std::cout << "\n-- You got KICKED\n"; });
 
                     return true;
                 } else {
                     return false;
                 }
             },
-            [](auto&&...) { return false; });
+            [](auto) { return false; });
 
         if (found) {
             return;
         }
     }
 
-    throw std::invalid_argument("Secret name not in list of people");
+    throw std::invalid_argument("secret_name: \"" + args.check.secret_name + "\" not in "
+                                + *args.check.in_public);
 }

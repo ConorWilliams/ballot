@@ -23,10 +23,6 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
                 if (p.pref[i] == r) {
                     double non_hostel_penalty = is_hostel(r) ? 0.0 : 0.5;
 
-                    if (p.priority == 0) {
-                        // This means people in priority zero are are not pushed into hostels
-                        non_hostel_penalty = 0.5;
-                    }
                     // Cost of assigning person to room they DO want.  Ensure: 0 < cost < 1
                     return 0.5 * std::tanh(i * coef) + non_hostel_penalty;
                 }
