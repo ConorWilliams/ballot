@@ -102,7 +102,7 @@ template <class... Vs> decltype(auto) match(Vs&&... vs) {
 
 /////////////////////////////////////////////////////////////////////////////
 
-std::vector<RealPerson> parse_people(Args const&);
+std::vector<RealPerson> parse_people(std::string const&);
 
 std::vector<RealRoom> find_rooms(std::vector<RealPerson> const&);
 

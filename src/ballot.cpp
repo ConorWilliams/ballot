@@ -43,7 +43,7 @@ std::string random_string(std::size_t len = 32) {
 }  // namespace
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
-std::vector<RealPerson> parse_people(Args const& args) {
+std::vector<RealPerson> parse_people(std::string const& fname) {
     // Have to manually include carriage return ('\r')
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
@@ -51,7 +51,7 @@ std::vector<RealPerson> parse_people(Args const& args) {
                  csv2::trim_policy::trim_characters<' ', '\r', '\n'>>
         csv;
 
-    csv.mmap(args.run.in_people);  // Throws if no file
+    csv.mmap(fname);  // Throws if no file
 
     std::vector<RealPerson> people;
 

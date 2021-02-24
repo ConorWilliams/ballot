@@ -16,6 +16,7 @@
 #include "cereal/types/optional.hpp"
 #include "cereal/types/string.hpp"
 #include "cereal/types/vector.hpp"
+#include "collusion.hpp"
 #include "cost.hpp"
 #include "lapjv.hpp"
 
@@ -28,8 +29,10 @@ std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) 
         cereal::JSONInputArchive archive(file);
         archive(args.run.max_rooms, args.run.hostels, people, rooms);
     } else {
-        people = parse_people(args);
+        people = parse_people(args.run.in_people);
         rooms = find_rooms(people);
+
+        find_collusion(people);
 
         shuffle(people);  // Must randomise for fair ties break AND anonymity
 
