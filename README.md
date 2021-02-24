@@ -1,4 +1,10 @@
-# MCR room ballot
+<br />
+<p align="center">
+  <img src="./logo/ChuLion.png" height="250" />
+</p>
+<br />
+
+# MCR Room Ballot
 
 Welcome to the Churchill MCR postgraduate-room-ballot code, please read on to find out how to: run the ballot code if you are the computing officer this year **and** how you can verify that the room ballot was run honestly this year!
 
@@ -18,7 +24,7 @@ You will now have your very own copy of the `ballot` executable!
 
 ## Running the ballot
 
-First up you're your going to need a csv file containing everyone's room preferences see `example/example.csv` to get an idea of the expected format. Now compile the program and run the ballot like:
+First up you're your going to need a csv file containing everyone's room preferences see `example/example.csv` to get an idea of the expected format. Now compile the program, navigate to `example/` and run the ballot like:
 
  `../build/ballot run example.csv`
 
@@ -42,7 +48,7 @@ where you can supply the optional flag `-i /path/to/public_ballot.json` to speci
 
 ## Details about the ballot
 
-The ballot code formulates the task as solving the balanced linear [assignment problem](https://en.wikipedia.org/wiki/Assignment_problem). This means we define a [cost function](src/cost.hpp) which assigns a cost to allocating any student to any room. The student-room pairs are then permuted until the global minimum of the cost funtion (summed over all pair) is found. This is done using the [Jonker-Volgenant algorithm](https://doi.org/10.1007/BF02278710). 
+The ballot code formulates the task as solving the balanced linear [assignment problem](https://en.wikipedia.org/wiki/Assignment_problem). We define a [cost function](src/cost.hpp) which assigns a value to allocating any student to any room. The student-room pairs are then permuted until the global minimum of the cost function (value summed over all pair) is found. This is done using the [Jonker-Volgenant algorithm](https://doi.org/10.1007/BF02278710). 
 
 In order to allow the possibility that all students get kicked off the ballot the list of rooms is augmented with p (the number of people) "kicked-rooms". To ensure balanced assignment the missing preference-free null-people are appended to the  
 

@@ -1,4 +1,3 @@
-
 // Copyright (C) 2020 Conor Williams
 
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -175,9 +174,7 @@ void write_results(std::vector<Person> const& people,
         return w;
     }();
 
-    std::ofstream fstream(*args.run.out_secret);
-
-    for (auto&& [name, str] : ordered_results) {
+    for (std::ofstream fstream{*args.run.out_secret}; auto&& [name, str] : ordered_results) {
         fstream << std::left << std::setw(w + 2) << name;
         fstream << str << '\n';
     }

@@ -32,6 +32,8 @@ struct Args {
         std::optional<std::string> out_public = "public_ballot.json";  // Write anonymised here
         std::optional<std::size_t> max_rooms;                          // Maximum num rooms to use
         std::optional<std::vector<std::string>> hostels;               // List of hostels
+
+        std::optional<std::vector<std::pair<std::string, int>>> test;
     };
 
     Args() = default;  // Required by structopt, cereal
@@ -50,7 +52,7 @@ struct Args {
 };
 
 STRUCTOPT(Args::Check, secret_name, in_public);
-STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels);
+STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels, test);
 STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
