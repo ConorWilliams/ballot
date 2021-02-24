@@ -1,6 +1,7 @@
 #include "collusion.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <set>
@@ -31,7 +32,7 @@ void report_k_cycles(std::size_t k, std::vector<RealPerson> const& people) {
             return x.sub_pref == s;
         });
 
-        if (nx - it > 1) {
+        if (nx - it >= static_cast<std::ptrdiff_t>(k)) {
             // Find longest name for pretty print
             std::size_t w = 0;
 

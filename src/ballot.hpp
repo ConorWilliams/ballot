@@ -60,6 +60,7 @@ struct Args {
 STRUCTOPT(Args::Verify, secret_name, in_public);
 STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels, test);
 STRUCTOPT(Args::Cycle, in_people, ks);
+
 STRUCTOPT(Args, run, verify, cycle);
 
 /////////////////////////////////////////////////////////////////////////////
