@@ -50,7 +50,9 @@ where you can supply the optional flag `-i /path/to/public_ballot.json` to speci
 
 The ballot code formulates the task as solving the balanced linear [assignment problem](https://en.wikipedia.org/wiki/Assignment_problem). We define a [cost function](src/cost.hpp) which assigns a value to allocating any student to any room. The student-room pairs are then permuted until the global minimum of the cost function (value summed over all pair) is found. This is done using the [Jonker-Volgenant algorithm](https://doi.org/10.1007/BF02278710). 
 
-In order to allow the possibility that all students get kicked off the ballot the list of rooms is augmented with p (the number of people) "kicked-rooms". To ensure balanced assignment the missing preference-free null-people are appended to the  
+In order to allow the possibility that all students get kicked off the ballot the list of rooms is augmented with p (the number of people) "kicked-rooms". To ensure balanced assignment, preference-free null-people are appended to the list of people. 
+
+If the total number of allocated rooms needs to be limited this is modelled through the introduction of anti-people which preferentially bind to real-rooms more strongly than any student.   
 
 ### The cost function
 
