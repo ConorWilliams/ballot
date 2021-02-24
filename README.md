@@ -23,7 +23,9 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-You will now have your very own copy of the `ballot` executable!
+You will now have your very own copy of the `ballot` executable! 
+
+Alternatively 64-bit Linux binaries are provided with each [release](https://github.com/ConorWilliams/ballot/releases).
 
 ## Running the ballot
 
