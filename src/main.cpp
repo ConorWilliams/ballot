@@ -24,8 +24,8 @@ std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) 
     std::vector<RealPerson> people;
     std::vector<RealRoom> rooms;
 
-    if (args.check.has_value()) {
-        std::ifstream file(*args.check.in_public);
+    if (args.verify.has_value()) {
+        std::ifstream file(*args.verify.in_public);
         cereal::JSONInputArchive archive(file);
         archive(args.run.max_rooms, args.run.hostels, people, rooms);
     } else {

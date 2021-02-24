@@ -20,7 +20,7 @@
 // Argument parsing
 
 struct Args {
-    struct Check : structopt::sub_command {
+    struct Verify : structopt::sub_command {
         std::string secret_name;                                      // Verifies this name
         std::optional<std::string> in_public = "public_ballot.json";  // Public ballot file
     };
@@ -52,15 +52,15 @@ struct Args {
     }
 
     // Subcommands
-    Check check;
+    Verify verify;
     Run run;
     Cycle cycle;
 };
 
-STRUCTOPT(Args::Check, secret_name, in_public);
+STRUCTOPT(Args::Verify, secret_name, in_public);
 STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels, test);
 STRUCTOPT(Args::Cycle, in_people, ks);
-STRUCTOPT(Args, run, check, cycle);
+STRUCTOPT(Args, run, verify, cycle);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +96,7 @@ using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
 namespace impl {
 
 template <class... Ts> struct overload : Ts... { using Ts::operator()...; };
-template <class... Ts> overload(Ts...)->overload<Ts...>;
+template <class... Ts> overload(Ts...) -> overload<Ts...>;
 
 }  // namespace impl
 

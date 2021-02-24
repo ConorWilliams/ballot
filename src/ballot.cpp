@@ -83,7 +83,7 @@ std::vector<RealPerson> parse_people(std::string const& fname) {
         people.push_back(std::move(p));
     }
 
-    // Check all people have made the same number of choices and that there is at least one person
+    // verify all people have made the same number of choices and that there is at least one person
 
     if (people.empty()) {
         throw std::runtime_error("No people in csv");
@@ -186,7 +186,7 @@ void highlight_results(std::vector<Person> const& people,
     for (std::size_t i = 0; i < people.size(); i++) {
         auto found = match(people[i])(
             [&](RealPerson const& p) {
-                if (p.secret_name == args.check.secret_name) {
+                if (p.secret_name == args.verify.secret_name) {
                     std::cout << "-- Your choices:";
 
                     for (auto&& room : p.pref) {
@@ -209,6 +209,6 @@ void highlight_results(std::vector<Person> const& people,
         }
     }
 
-    throw std::invalid_argument("secret_name: \"" + args.check.secret_name + "\" not in "
-                                + *args.check.in_public);
+    throw std::invalid_argument("secret_name: \"" + args.verify.secret_name + "\" not in "
+                                + *args.verify.in_public);
 }

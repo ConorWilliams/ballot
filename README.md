@@ -47,7 +47,7 @@ Finally you can control the total number of allocated rooms using the `-m` or `-
 
 To verify the MCR computing officer hasn't fiddled your position you need a copy of the `public_ballot.json` file they generated and and your "secret_name" which you should have received securely. Now run:
 
-`./ballot check YOUR_SECRET_NAME `
+`./ballot verify YOUR_SECRET_NAME `
 
 where you can supply the optional flag `-i /path/to/public_ballot.json` to specify the location of the public ballot file.
 
