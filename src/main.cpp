@@ -13,34 +13,40 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
+std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) {
+    std::vector<RealPerson> people;
+    std::vector<RealRoom> rooms;
+
+    if (args.check.has_value()) {
+        std::ifstream file(*args.check.in_public);
+        cereal::JSONInputArchive archive(file);
+        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+    } else {
+        people = parse_people(args);
+        rooms = find_rooms(people);
+
+        shuffle(people);  // Must randomise for fair ties break AND anonymity
+
+        // Output for future checking
+        std::ofstream file(*args.run.out_public);
+        cereal::JSONOutputArchive archive(file);
+        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+    }
+
+    return {std::move(people), std::move(rooms)};
+}
+
 int main(int argc, char* argv[]) {
     Args args{argc, argv};
 
-    std::vector<RealPerson> r_people;
-    std::vector<RealRoom> r_rooms;
-
-    if (args.check_name) {
-        std::ifstream file(args.people);
-        cereal::JSONInputArchive archive(file);
-        archive(args.max_rooms, args.hostels, r_people, r_rooms);
-    } else {
-        r_people = parse_people(args);
-        r_rooms = find_rooms(r_people);
-
-        shuffle(r_people);  // Must randomise for fair ties break AND anonymity
-
-        // Output for future checking
-        std::ofstream file(*args.out_anon);
-        cereal::JSONOutputArchive archive(file);
-        archive(args.max_rooms, args.hostels, r_people, r_rooms);
-    }
+    auto [r_people, r_rooms] = load_data(args);
 
     std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
     std::cout << "-- Between them they selected " << r_rooms.size() << " rooms, ";
 
     auto is_hostel = [&](RealRoom const& room) -> bool {
-        if (args.hostels) {
-            for (auto&& prefix : *args.hostels) {
+        if (args.run.hostels) {
+            for (auto&& prefix : *args.run.hostels) {
                 if (room.starts_with(prefix)) {
                     return true;
                 }
@@ -65,10 +71,11 @@ int main(int argc, char* argv[]) {
     std::size_t num_people = people.size();
 
     // Need to add an anti-person for each room we wish to remove from the ballot
-    if (args.max_rooms && rooms.size() > *args.max_rooms) {
-        std::cout << "-- You want to limit the number of rooms to " << *args.max_rooms;
-        std::cout << " so we are adding " << rooms.size() - *args.max_rooms << " anti-people.\n";
-        people.resize(people.size() + rooms.size() - *args.max_rooms, AntiPerson{});
+    if (args.run.max_rooms && rooms.size() > *args.run.max_rooms) {
+        auto m = *args.run.max_rooms;
+        std::cout << "-- You want to limit the number of rooms to " << m;
+        std::cout << " so we are adding " << rooms.size() - m << " anti-people.\n";
+        people.resize(people.size() + rooms.size() - m, AntiPerson{});
     }
 
     // For every real person we need the possibility of them being kicked off the ballot
@@ -83,7 +90,7 @@ int main(int argc, char* argv[]) {
         return cost_function(p, r, is_hostel);
     });
 
-    if (!args.check_name) {
+    if (args.run.has_value()) {
         write_results(people, rooms, args);
 
         std::size_t count_normal = 0;

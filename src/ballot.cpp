@@ -45,7 +45,7 @@ std::vector<RealPerson> parse_people(Args const& args) {
                  csv2::trim_policy::trim_characters<' ', '\r', '\n'>>
         csv;
 
-    csv.mmap(args.people);  // Throws if no file
+    csv.mmap(args.run.in_people);  // Throws if no file
 
     std::vector<RealPerson> people;
 
@@ -158,7 +158,7 @@ void write_results(std::vector<Person> const& people,
             [](auto&&...) {});
     }
 
-    std::ofstream fstream(*args.out_secret);
+    std::ofstream fstream(*args.run.out_secret);
 
     fstream << "name,crsid,priority,choice,room,secret_name";
 
@@ -173,7 +173,7 @@ void highlight_results(std::vector<Person> const& people,
     for (std::size_t i = 0; i < people.size(); i++) {
         auto found = match(people[i], rooms[i])(
             [&](RealPerson const& p, auto const& r) {
-                if (p.name == args.check_name) {
+                if (p.secret_name == args.check.secret_name) {
                     std::cout << "-- Your choices:";
 
                     for (auto&& room : p.pref) {

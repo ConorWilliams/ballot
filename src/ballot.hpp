@@ -11,15 +11,28 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-// This apps command line augment's struct
-struct Args {
-    std::string people;
+struct Check : structopt::sub_command {
+    std::string secret_name;                                      // Verifies results for this name
+    std::optional<std::string> in_public = "public_ballot.json";  // Public ballot file
+};
 
-    std::optional<std::string> out_secret = "secret_ballot.csv";  // Write ballot results here
-    std::optional<std::string> out_anon = "public_ballot.json";   // Write anonymised input here
-    std::optional<std::string> check_name;                        // Verifies results for this name
-    std::optional<std::size_t> max_rooms;                         // Maximum number of rooms to use
-    std::optional<std::vector<std::string>> hostels;              // List of hostels
+STRUCTOPT(Check, secret_name, in_public);
+
+struct Run : structopt::sub_command {
+    std::string in_people;
+
+    std::optional<std::string> out_secret = "secret_ballot.csv";   // Write ballot results here
+    std::optional<std::string> out_public = "public_ballot.json";  // Write anonymised input here
+    std::optional<std::size_t> max_rooms;                          // Maximum number of rooms to use
+    std::optional<std::vector<std::string>> hostels;               // List of hostels
+};
+
+STRUCTOPT(Run, in_people, out_secret, out_public, max_rooms, hostels);
+
+struct Args {
+    // Subcommands
+    Check check;
+    Run run;
 
     Args() = default;  // Required by structopt, cereal
 
@@ -32,7 +45,7 @@ struct Args {
     }
 };
 
-STRUCTOPT(Args, people, check_name, max_rooms, out_secret, out_anon, hostels);
+STRUCTOPT(Args, run, check);
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -51,19 +64,13 @@ struct AntiPerson {};
 struct RealPerson {
     std::string name{};
     std::string crsid{};
+
     std::string secret_name{};
-
     std::vector<RealRoom> pref{};
-
     int priority = 1;
 
-    template <class Archive> void save(Archive& archive) const {
+    template <class Archive> void serialize(Archive& archive) {
         archive(secret_name, pref, priority);
-    }
-
-    template <class Archive> void load(Archive& archive) {
-        // Swap name and secret name
-        archive(name, pref, priority);
     }
 };
 
