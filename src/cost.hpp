@@ -19,6 +19,7 @@
 template <typename F> double cost_function(Person const& p, Room const& r, F&& is_hostel) {
     // Constants
     constexpr double bias_fist = 0.95;  // in (0,1)
+    constexpr double bias_prioity = 4;
     constexpr double big_num = 100;
 
     return match(p, r)(
@@ -45,7 +46,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
             //     disincentivizes people choosing lots of honey-pot rooms however, this conflicts
             //     with desire to reduce kicking. Functional form gives higher cost to kicking off
             //     lower priority numbers. Guarantees, 1 < cost <= 2
-            return static_cast<double>(2 + p.priority) / (1 + p.priority);
+            return 1.0 + bias_prioity * std::exp(-p.priority);
         },
         [](AntiPerson const&, RealRoom const&) -> double {
             // Justification:
