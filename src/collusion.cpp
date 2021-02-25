@@ -37,7 +37,7 @@ void report_k_cycles(std::size_t k, std::vector<RealPerson> const& people) {
             std::size_t w = 0;
 
             for (auto ix = it; ix != nx; ++ix) {
-                w = std::max(w, nx->name.size());
+                w = std::max(w, ix->name.size());
             }
 
             // Report all choices
