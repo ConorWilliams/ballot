@@ -128,7 +128,8 @@ int main(int argc, char* argv[]) {
                 [&](auto&...) {});
         }
 
-        std::cout << "-- Minima Breakdown:\n";
+        std::cout << "-- Successfully allocated " << count_normal + count_hostel << " rooms! ";
+        std::cout << "Minima Breakdown:\n";
         std::cout << "--    Normal: " << count_normal << '\n';
         std::cout << "--    Hostel: " << count_hostel << '\n';
         std::cout << "--    Kicked: " << count_kicked << '\n';

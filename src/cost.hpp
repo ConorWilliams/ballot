@@ -31,7 +31,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
                     double non_hostel_penalty = is_hostel(r) ? 0.0 : 0.5;
 
                     // Cost of assigning person to room they DO want.  Ensure: 0 < cost <= 1
-                    return 0.5 * (1 - cut + std::tanh(i * coef)) + non_hostel_penalty;
+                    return 0.5 * std::tanh(i * coef) / cut + non_hostel_penalty;
                 }
             }
             // Cost of assigning person to room they DO-NOT want, justification:
