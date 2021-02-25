@@ -42,7 +42,7 @@ void report_k_cycles(std::size_t k, std::vector<RealPerson> const& people) {
 
             // Report all choices
             for (auto ix = it; ix != nx; ++ix) {
-                std::cout << "--" << std::right << std::setw(w + 4) << ix->name << " : ";
+                std::cout << "--" << std::right << std::setw(w + 2) << ix->name << " : ";
                 for (auto&& room : ix->pref) {
                     std::cout << std::left << std::setw(5) << room;
                 }
