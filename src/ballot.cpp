@@ -57,7 +57,7 @@ std::vector<RealPerson> parse_people(std::string const& fname) {
 
     for (std::string buff; const auto row : csv) {
         RealPerson p;
-        int count = 0;
+        std::size_t count = 0;
         for (const auto cell : row) {
             switch (count++) {
                 case 0:
@@ -192,9 +192,11 @@ void highlight_results(std::vector<Person> const& people,
                     for (auto&& room : p.pref) {
                         std::cout << ' ' << room;
                     }
+                    std::cout << "-- Your choices :";
+                    std::cout << "-- Your priority: " << p.priority;
 
                     match(rooms[i])(
-                        [](RealRoom const& r) { std::cout << "\n-- You got room: " << r << '\n'; },
+                        [](RealRoom const& r) { std::cout << "\n-- You got room:" << r << '\n'; },
                         [](Kicked const&) { std::cout << "\n-- You got KICKED\n"; });
 
                     return true;

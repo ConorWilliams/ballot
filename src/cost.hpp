@@ -46,7 +46,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
             //     disincentivizes people choosing lots of honey-pot rooms however, this conflicts
             //     with desire to reduce kicking. Functional form gives higher cost to kicking off
             //     lower priority numbers. Guarantees, 1 < cost <= 2
-            return 1.0 + bias_prioity * std::exp(-p.priority);
+            return 1.0 + bias_prioity * std::exp(-static_cast<double>(p.priority));
         },
         [](AntiPerson const&, RealRoom const&) -> double {
             // Justification:

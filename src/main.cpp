@@ -103,38 +103,14 @@ int main(int argc, char* argv[]) {
     assert(people.size() <= rooms.size());
     people.resize(rooms.size(), NullPerson{});
 
-    std::cout << "-- Running minimisation...\n";
-    double sum = linear_assignment(people, rooms, [&](Person const& p, Room const& r) {
+    linear_assignment(people, rooms, [&](Person const& p, Room const& r) {
         return cost_function(p, r, is_hostel);
     });
 
     if (args.run.has_value()) {
         write_results(people, rooms, args);
+        analayse(people, rooms, is_hostel);
 
-        std::size_t count_normal = 0;
-        std::size_t count_hostel = 0;
-        std::size_t count_kicked = 0;
-
-        for (std::size_t i = 0; i < people.size(); i++) {
-            match(people[i], rooms[i])(
-                [&](RealPerson&, RealRoom& r) {
-                    if (is_hostel(r)) {
-                        ++count_hostel;
-                    } else {
-                        ++count_normal;
-                    }
-                },
-                [&](RealPerson&, Kicked&) { ++count_kicked; },
-                [&](auto&...) {});
-        }
-
-        std::cout << "-- Successfully allocated " << count_normal + count_hostel << " rooms! ";
-        std::cout << "Minima Breakdown:\n";
-        std::cout << "--    Normal: " << count_normal << '\n';
-        std::cout << "--    Hostel: " << count_hostel << '\n';
-        std::cout << "--    Kicked: " << count_kicked << '\n';
-
-        std::cout << "-- The final cost was " << sum << std::endl;
     } else {
         highlight_results(people, rooms, args);
     }
