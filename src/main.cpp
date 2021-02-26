@@ -82,25 +82,32 @@ int main(int argc, char* argv[]) {
 
     std::cout << "of which " << count << " are hostels.\n";
 
+    // Must sort as we kick the (numerically highest) priority, must use stable for
+    // implementation inter-compatibility
+    std::stable_sort(
+        r_people.begin(), r_people.end(), [](RealPerson const& a, RealPerson const& b) {
+            return a.priority < b.priority;
+        });
+
     // Convert to variants
     std::vector people = convert_vector<Person>(std::move(r_people));
     std::vector rooms = convert_vector<Room>(std::move(r_rooms));
 
-    std::size_t num_people = people.size();
+    std::vector<std::pair<Person, Room>> results{};
 
-    // Need to add an anti-person for each room we wish to remove from the ballot
-    if (args.run.max_rooms && rooms.size() > *args.run.max_rooms) {
-        auto m = *args.run.max_rooms;
-        std::cout << "-- You want to limit the number of rooms to " << m;
-        std::cout << " so we are adding " << rooms.size() - m << " anti-people.\n";
-        people.resize(people.size() + rooms.size() - m, AntiPerson{});
+    // Need to remove the people who missed the ballot
+    if (args.run.max_rooms) {
+        std::cout << "-- You want to limit the number of rooms to " << *args.run.max_rooms << '\n';
+    }
+    while (args.run.max_rooms && people.size() > *args.run.max_rooms) {
+        results.emplace_back(people.back(), Kicked{});
+        people.pop_back();
     }
 
     // For every real person we need the possibility of them being kicked off the ballot
-    rooms.resize(rooms.size() + num_people, Kicked{});
+    rooms.resize(people.size() + rooms.size(), Kicked{});
 
     // Must pad people (always more than rooms) with null people for balanced assignment
-    assert(people.size() <= rooms.size());
     people.resize(rooms.size(), NullPerson{});
 
     linear_assignment(people, rooms, [&](Person const& p, Room const& r) {
@@ -110,7 +117,6 @@ int main(int argc, char* argv[]) {
     if (args.run.has_value()) {
         write_results(people, rooms, args);
         analayse(people, rooms, is_hostel);
-
     } else {
         highlight_results(people, rooms, args);
     }

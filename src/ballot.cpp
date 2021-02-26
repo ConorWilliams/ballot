@@ -31,12 +31,12 @@ namespace {  // Like static
 
 constexpr char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-std::random_device rng;
+std::random_device true_rng;
 
 // Generate a random string of characters for salting names before hash
 std::string random_string(std::size_t len = 32) {
     std::string out;
-    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), len, rng);
+    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), len, true_rng);
     return out;
 }
 
@@ -118,7 +118,9 @@ std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
     return {rooms.begin(), rooms.end()};
 }
 
-void shuffle(std::vector<RealPerson>& people) { std::shuffle(people.begin(), people.end(), rng); }
+void shuffle(std::vector<RealPerson>& people) {
+    std::shuffle(people.begin(), people.end(), true_rng);
+}
 
 void write_results(std::vector<Person> const& people,
                    std::vector<Room> const& rooms,
