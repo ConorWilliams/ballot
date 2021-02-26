@@ -122,15 +122,13 @@ void shuffle(std::vector<RealPerson>& people) {
     std::shuffle(people.begin(), people.end(), true_rng);
 }
 
-void write_results(std::vector<Person> const& people,
-                   std::vector<Room> const& rooms,
-                   Args const& args) {
+void write_results(std::vector<std::pair<RealPerson, Room>> const& result, Args const& args) {
     // Orders results for pretty printing
     std::set<std::pair<std::string, std::string>> ordered_results;
 
-    for (std::size_t i = 0; i < people.size(); i++) {
-        match(people[i], rooms[i])(
-            [&](RealPerson const& p, RealRoom const& r) {
+    for (auto&& [person, room] : result) {
+        match(room)(
+            [&, p = person](RealRoom const& r) {
                 // Get choice index
                 std::size_t const k = [&] {
                     for (std::size_t i = 0; i < p.pref.size(); i++) {
@@ -151,7 +149,7 @@ void write_results(std::vector<Person> const& people,
 
                 ordered_results.emplace(p.name, stream.str());
             },
-            [&](RealPerson const& p, Kicked const&) {
+            [&, p = person](Kicked const&) {
                 std::stringstream stream;
 
                 stream << std::left << std::setw(18) << "," + p.crsid;
@@ -161,8 +159,7 @@ void write_results(std::vector<Person> const& people,
                 stream << ',' << p.secret_name;
 
                 ordered_results.emplace(p.name, stream.str());
-            },
-            [](auto&&...) {});
+            });
     }
 
     // Find longest name
@@ -182,37 +179,23 @@ void write_results(std::vector<Person> const& people,
     }
 }
 
-void highlight_results(std::vector<Person> const& people,
-                       std::vector<Room> const& rooms,
-                       Args const& args) {
-    for (std::size_t i = 0; i < people.size(); i++) {
-        auto found = match(people[i])(
-            [&](RealPerson const& p) {
-                if (p.secret_name == args.verify.secret_name) {
-                    std::cout << "-- Your choices:";
+void highlight_results(std::vector<std::pair<RealPerson, Room>> const& results, Args const& args) {
+    for (auto&& [person, room] : results) {
+        if (person.secret_name == args.verify.secret_name) {
+            std::cout << "-- Your choices :";
 
-                    for (auto&& room : p.pref) {
-                        std::cout << ' ' << room;
-                    }
-                    std::cout << "-- Your choices :";
-                    std::cout << "-- Your priority: " << p.priority;
+            for (auto&& room : person.pref) {
+                std::cout << ' ' << room;
+            }
 
-                    match(rooms[i])(
-                        [](RealRoom const& r) { std::cout << "\n-- You got room:" << r << '\n'; },
+            std::cout << "\n-- Your priority: " << person.priority;
+
+            match(room)([](RealRoom const& r) { std::cout << "\n-- You got room : " << r << '\n'; },
                         [](Kicked const&) { std::cout << "\n-- You got KICKED\n"; });
 
-                    return true;
-                } else {
-                    return false;
-                }
-            },
-            [](auto) { return false; });
-
-        if (found) {
             return;
         }
     }
-
     throw std::invalid_argument("secret_name: \"" + args.verify.secret_name + "\" not in "
                                 + *args.verify.in_public);
 }

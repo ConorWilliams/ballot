@@ -82,27 +82,27 @@ int main(int argc, char* argv[]) {
 
     std::cout << "of which " << count << " are hostels.\n";
 
-    // Must sort as we kick the (numerically highest) priority, must use stable for
-    // implementation inter-compatibility
+    // Must sort as we kick the (numerically highest) priority, must use stable sort for
+    // implementation inter-compatibility.
     std::stable_sort(
         r_people.begin(), r_people.end(), [](RealPerson const& a, RealPerson const& b) {
             return a.priority < b.priority;
         });
 
-    // Convert to variants
-    std::vector people = convert_vector<Person>(std::move(r_people));
-    std::vector rooms = convert_vector<Room>(std::move(r_rooms));
-
-    std::vector<std::pair<Person, Room>> results{};
+    std::vector<std::pair<RealPerson, Room>> results{};
 
     // Need to remove the people who missed the ballot
     if (args.run.max_rooms) {
         std::cout << "-- You want to limit the number of rooms to " << *args.run.max_rooms << '\n';
     }
-    while (args.run.max_rooms && people.size() > *args.run.max_rooms) {
-        results.emplace_back(people.back(), Kicked{});
-        people.pop_back();
+    while (args.run.max_rooms && r_people.size() > *args.run.max_rooms) {
+        results.emplace_back(std::move(r_people.back()), Kicked{});
+        r_people.pop_back();
     }
+
+    // Convert to variants
+    std::vector people = convert_vector<Person>(std::move(r_people));
+    std::vector rooms = convert_vector<Room>(std::move(r_rooms));
 
     // For every real person we need the possibility of them being kicked off the ballot
     rooms.resize(people.size() + rooms.size(), Kicked{});
@@ -114,11 +114,17 @@ int main(int argc, char* argv[]) {
         return cost_function(p, r, is_hostel);
     });
 
+    for (std::size_t i = 0; i < people.size(); i++) {
+        match(people[i], rooms[i])(
+            [&](RealPerson& p, auto& r) { results.emplace_back(std::move(p), std::move(r)); },
+            [&](NullPerson&, auto&) {});
+    }
+
     if (args.run.has_value()) {
-        write_results(people, rooms, args);
-        analayse(people, rooms, is_hostel);
+        write_results(results, args);
+        analayse(results, is_hostel);
     } else {
-        highlight_results(people, rooms, args);
+        highlight_results(results, args);
     }
 
     return 0;

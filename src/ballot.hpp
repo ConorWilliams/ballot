@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -75,8 +76,6 @@ using Room = std::variant<Kicked, RealRoom>;
 
 struct NullPerson {};
 
-struct AntiPerson {};
-
 struct RealPerson {
     std::string name{};
     std::string crsid{};
@@ -90,7 +89,7 @@ struct RealPerson {
     }
 };
 
-using Person = std::variant<NullPerson, AntiPerson, RealPerson>;
+using Person = std::variant<NullPerson, RealPerson>;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -116,35 +115,33 @@ std::vector<RealRoom> find_rooms(std::vector<RealPerson> const&);
 
 void shuffle(std::vector<RealPerson>&);
 
-void write_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
+void write_results(std::vector<std::pair<RealPerson, Room>> const&, Args const&);
 
-void highlight_results(std::vector<Person> const&, std::vector<Room> const&, Args const&);
+void highlight_results(std::vector<std::pair<RealPerson, Room>> const&, Args const&);
 
 template <typename U, typename T> std::vector<U> convert_vector(std::vector<T>&& tmp) {
     return {std::move_iterator(tmp.begin()), std::move_iterator(tmp.end())};
 }
 
-template <typename F> inline void analayse(std::vector<Person> const& people,
-                                           std::vector<Room> const& rooms,
-                                           F&& is_hostel) {
+template <typename F>
+inline void analayse(std::vector<std::pair<RealPerson, Room>> const& results, F&& is_hostel) {
     std::size_t count_normal = 0;
     std::size_t count_hostel = 0;
     std::size_t count_kicked = 0;
 
     std::size_t max_priority = 0;
 
-    for (auto&& elem : people) {
-        match(elem)([&](RealPerson const& p) { max_priority = std::max(max_priority, p.priority); },
-                    [](auto const&) {});
+    for (auto&& [p, r] : results) {
+        max_priority = std::max(max_priority, p.priority);
     }
 
     std::map<std::size_t, std::vector<std::size_t>> arr;
 
     std::vector<std::size_t> kicked(max_priority + 1, 0);
 
-    for (std::size_t i = 0; i < people.size(); i++) {
-        match(people[i], rooms[i])(
-            [&](RealPerson const& p, RealRoom const& r) {
+    for (auto&& [person, room] : results) {
+        match(room)(
+            [&, p = person](RealRoom const& r) {
                 if (is_hostel(r)) {
                     ++count_hostel;
                 } else {
@@ -165,11 +162,10 @@ template <typename F> inline void analayse(std::vector<Person> const& people,
 
                 it->second[p.priority] += 1;
             },
-            [&](RealPerson const& p, Kicked const&) {
+            [&, p = person](Kicked const&) {
                 ++count_kicked;
                 kicked[p.priority] += 1;
-            },
-            [&](auto&...) {});
+            });
     }
 
     std::cout << "-- Allocated " << count_normal + count_hostel;
