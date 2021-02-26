@@ -18,9 +18,9 @@
 // Cost function - overall cost is minimised
 template <typename F> double cost_function(Person const& p, Room const& r, F&& is_hostel) {
     // Constants
-    constexpr double bias_fist = 0.95;  // in (0,1)
-    constexpr double bias_prioity = 4;
+    constexpr double bias_fist = 0.95;  // In (0,1)
     constexpr double big_num = 100;
+    constexpr double bias_prioity = 10;  // Must be less than big_num
 
     return match(p, r)(
         [&](RealPerson const& p, RealRoom const& r) -> double {
