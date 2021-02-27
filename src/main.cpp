@@ -23,6 +23,8 @@ int main(int argc, char* argv[]) {
     // Automagically parses
     Args args{argc, argv};
 
+    std::cout << "-- Welcome to the Churchill MCR's room-ballot code!\n\n";
+
     std::vector<Person> people;
     std::vector<Room> rooms;
 
