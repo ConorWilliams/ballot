@@ -42,6 +42,8 @@ std::string random_string(std::size_t len = 32) {
 
 }  // namespace
 
+void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), true_rng); }
+
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(std::string const& fname) {
     // Have to manually include carriage return ('\r')
@@ -83,7 +85,7 @@ std::vector<Person> parse_people(std::string const& fname) {
         people.push_back(std::move(real_p));
     }
 
-    // verify all people have made the same number of choices and that there is at least one person
+    // Verify all people have made the same number of choices and that there is at least one person.
 
     if (people.empty()) {
         throw std::runtime_error("No people in csv");
@@ -120,14 +122,10 @@ std::vector<Room> find_rooms(std::vector<Person> const& people) {
     return {rooms.begin(), rooms.end()};
 }
 
-void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), true_rng); }
-
 void write_results(std::vector<std::pair<Person, Room>> const& result, Args const& args) {
     // Orders results for pretty printing
-    std::set<std::pair<std::string, std::string>> ordered_results;
 
     auto sorted = result;
-
     std::sort(sorted.begin(), sorted.end());
 
     // Find longest name
@@ -146,7 +144,6 @@ void write_results(std::vector<std::pair<Person, Room>> const& result, Args cons
     for (std::ofstream fstream{*args.run.out_secret}; auto&& [person, room] : sorted) {
         if (person) {
             fstream << std::left << std::setw(w + 2) << person->name;
-
             fstream << std::left << std::setw(18) << "," + person->crsid;
             fstream << std::left << std::setw(4) << ",P" + std::to_string(person->priority);
 

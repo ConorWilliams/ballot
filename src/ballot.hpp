@@ -74,10 +74,9 @@ namespace impl {
 struct Person {
     std::string name{};
     std::string crsid{};
-
-    std::string secret_name{};
-    std::vector<std::string> pref{};
     std::size_t priority = 1;
+    std::vector<std::string> pref{};
+    std::string secret_name{};
 
     std::optional<std::size_t> choice_index(std::string const& r) const {
         for (std::size_t i = 0; i < pref.size(); i++) {
@@ -139,8 +138,7 @@ void analayse(std::vector<std::pair<Person, Room>> const& results, F&& is_hostel
             }
 
             if (std::optional i = p->choice_index(*r)) {
-                auto [it, inserted] = arr.try_emplace(*i, std::vector<std::size_t>(p_max + 1, 0));
-
+                auto [it, unwanted] = arr.try_emplace(*i, std::vector<std::size_t>(p_max + 1, 0));
                 it->second[p->priority] += 1;
             } else {
                 throw std::runtime_error("Person allocated to a room they didn't want!");

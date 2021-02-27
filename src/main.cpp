@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     std::cout << "-- Between them they selected " << rooms.size() << " rooms, ";
 
     auto is_hostel = [&](Room const& room) -> bool {
-        if (args.run.hostels && room) {
+        if (room && args.run.hostels) {
             for (auto&& prefix : *args.run.hostels) {
                 if (room->starts_with(prefix)) {
                     return true;
