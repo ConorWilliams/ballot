@@ -43,7 +43,7 @@ std::string random_string(std::size_t len = 32) {
 }  // namespace
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
-std::vector<RealPerson> parse_people(std::string const& fname) {
+std::vector<Person> parse_people(std::string const& fname) {
     // Have to manually include carriage return ('\r')
     csv2::Reader<csv2::delimiter<','>,
                  csv2::quote_character<'"'>,
@@ -53,34 +53,34 @@ std::vector<RealPerson> parse_people(std::string const& fname) {
 
     csv.mmap(fname);  // Throws if no file
 
-    std::vector<RealPerson> people;
+    std::vector<Person> people;
 
     for (std::string buff; const auto row : csv) {
-        RealPerson p;
+        impl::Person real_p;
         std::size_t count = 0;
         for (const auto cell : row) {
             switch (count++) {
                 case 0:
-                    cell.read_value(p.name);
+                    cell.read_value(real_p.name);
                     break;
                 case 1:
-                    cell.read_value(p.crsid);
+                    cell.read_value(real_p.crsid);
                     break;
                 case 2:
                     buff.clear();
                     cell.read_value(buff);
-                    p.priority = std::stoi(buff);
+                    real_p.priority = std::stoi(buff);
                     break;
                 default:
                     buff.clear();
                     cell.read_value(buff);
-                    p.pref.push_back(buff);
+                    real_p.pref.push_back(buff);
             }
         }
 
-        picosha2::hash256_hex_string(p.name + random_string(), p.secret_name);
+        picosha2::hash256_hex_string(real_p.name + random_string(), real_p.secret_name);
 
-        people.push_back(std::move(p));
+        people.push_back(std::move(real_p));
     }
 
     // verify all people have made the same number of choices and that there is at least one person
@@ -89,10 +89,10 @@ std::vector<RealPerson> parse_people(std::string const& fname) {
         throw std::runtime_error("No people in csv");
     }
 
-    std::size_t const k = people[0].pref.size();
+    std::size_t const k = people[0]->pref.size();
 
     for (auto const& p : people) {
-        if (p.pref.size() != k) {
+        if (p->pref.size() != k) {
             throw std::runtime_error(
                 "Not all people have made the same number of choices, maybe a trailing newline");
         }
@@ -102,15 +102,17 @@ std::vector<RealPerson> parse_people(std::string const& fname) {
 }
 
 // Find all the rooms people have selected
-std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
+std::vector<Room> find_rooms(std::vector<Person> const& people) {
     // Using set (vs unordered_set) as it guarantees iteration order, otherwise results platform
     // dependant in-case of degenerate minima.
-    std::set<RealRoom> rooms;
+    std::set<std::string_view> rooms;
 
     for (auto const& person : people) {
-        for (auto const& room : person.pref) {
-            if (!rooms.count(room)) {
-                rooms.insert(room);
+        if (person) {
+            for (std::string_view room : person->pref) {
+                if (!rooms.count(room)) {
+                    rooms.insert(room);
+                }
             }
         }
     }
@@ -118,80 +120,69 @@ std::vector<RealRoom> find_rooms(std::vector<RealPerson> const& people) {
     return {rooms.begin(), rooms.end()};
 }
 
-void shuffle(std::vector<RealPerson>& people) {
-    std::shuffle(people.begin(), people.end(), true_rng);
-}
+void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), true_rng); }
 
-void write_results(std::vector<std::pair<RealPerson, Room>> const& result, Args const& args) {
+void write_results(std::vector<std::pair<Person, Room>> const& result, Args const& args) {
     // Orders results for pretty printing
     std::set<std::pair<std::string, std::string>> ordered_results;
 
-    for (auto&& [person, room] : result) {
-        match(room)(
-            [&, p = person](RealRoom const& r) {
-                // Get choice index
-                std::size_t const k = [&] {
-                    for (std::size_t i = 0; i < p.pref.size(); i++) {
-                        if (p.pref[i] == r) {
-                            return i;
-                        }
-                    }
-                    throw std::runtime_error("Person allocated to a room they didn't want!");
-                }();
+    auto sorted = result;
 
-                std::stringstream stream;
-
-                stream << std::left << std::setw(18) << "," + p.crsid;
-                stream << std::left << std::setw(4) << ",P" + std::to_string(p.priority);
-                stream << std::left << std::setw(5) << ",#" + std::to_string(k + 1);
-                stream << std::left << std::setw(6) << "," + r;
-                stream << ',' << p.secret_name;
-
-                ordered_results.emplace(p.name, stream.str());
-            },
-            [&, p = person](Kicked const&) {
-                std::stringstream stream;
-
-                stream << std::left << std::setw(18) << "," + p.crsid;
-                stream << std::left << std::setw(4) << ",P" + std::to_string(p.priority);
-                stream << std::left << std::setw(5) << ",#";
-                stream << std::left << std::setw(6) << ",KICK";
-                stream << ',' << p.secret_name;
-
-                ordered_results.emplace(p.name, stream.str());
-            });
-    }
+    std::sort(sorted.begin(), sorted.end());
 
     // Find longest name
     std::size_t w = [&] {
         std::size_t w = 0;
 
-        for (auto&& [name, str] : ordered_results) {
-            w = std::max(name.size(), w);
+        for (auto&& [person, room] : sorted) {
+            if (person) {
+                w = std::max(person->name.size(), w);
+            }
         }
 
         return w;
     }();
 
-    for (std::ofstream fstream{*args.run.out_secret}; auto&& [name, str] : ordered_results) {
-        fstream << std::left << std::setw(w + 2) << name;
-        fstream << str << '\n';
+    for (std::ofstream fstream{*args.run.out_secret}; auto&& [person, room] : sorted) {
+        if (person) {
+            fstream << std::left << std::setw(w + 2) << person->name;
+
+            fstream << std::left << std::setw(18) << "," + person->crsid;
+            fstream << std::left << std::setw(4) << ",P" + std::to_string(person->priority);
+
+            if (room) {
+                if (std::optional i = person->choice_index(*room)) {
+                    fstream << std::left << std::setw(5) << ",#" + std::to_string(*i + 1);
+                    fstream << std::left << std::setw(6) << "," + *room;
+                } else {
+                    throw std::runtime_error("Person allocated to a room they didn't want!");
+                }
+            } else {
+                fstream << std::left << std::setw(5) << ",#";
+                fstream << std::left << std::setw(6) << ",KICK";
+            }
+
+            fstream << ',' << person->secret_name << '\n';
+        }
     }
 }
 
-void highlight_results(std::vector<std::pair<RealPerson, Room>> const& results, Args const& args) {
+void highlight_results(std::vector<std::pair<Person, Room>> const& results, Args const& args) {
     for (auto&& [person, room] : results) {
-        if (person.secret_name == args.verify.secret_name) {
+        if (person && person->secret_name == args.verify.secret_name) {
             std::cout << "-- Your choices :";
 
-            for (auto&& room : person.pref) {
+            for (std::string_view room : person->pref) {
                 std::cout << ' ' << room;
             }
 
-            std::cout << "\n-- Your priority: " << person.priority;
+            std::cout << "\n-- Your priority: " << person->priority;
 
-            match(room)([](RealRoom const& r) { std::cout << "\n-- You got room : " << r << '\n'; },
-                        [](Kicked const&) { std::cout << "\n-- You got KICKED\n"; });
+            if (room) {
+                std::cout << "\n-- You got room : " << *room << '\n';
+            } else {
+                std::cout << "\n-- You got KICKED\n";
+            }
 
             return;
         }

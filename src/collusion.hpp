@@ -4,4 +4,4 @@
 
 #include "ballot.hpp"
 
-void report_k_cycles(std::size_t k, std::vector<RealPerson> const& people);
+void inline report_k_cycles(std::size_t k, std::vector<Person> const& people) {}

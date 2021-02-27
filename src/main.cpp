@@ -8,6 +8,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -20,9 +21,9 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
-std::pair<std::vector<RealPerson>, std::vector<RealRoom>> load_data(Args& args) {
-    std::vector<RealPerson> people;
-    std::vector<RealRoom> rooms;
+std::pair<std::vector<Person>, std::vector<Room>> load_data(Args& args) {
+    std::vector<Person> people;
+    std::vector<Room> rooms;
 
     if (args.verify.has_value()) {
         std::ifstream file(*args.verify.in_public);
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
     Args args{argc, argv};
 
     if (args.cycle.has_value()) {
-        std::vector<RealPerson> people = parse_people(args.cycle.in_people);
+        std::vector people = parse_people(args.cycle.in_people);
 
         for (auto&& k : args.cycle.ks) {
             report_k_cycles(k, people);
@@ -57,15 +58,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    auto [r_people, r_rooms] = load_data(args);
+    auto [people, rooms] = load_data(args);
 
-    std::cout << "-- There are " << r_people.size() << " people in the ballot.\n";
-    std::cout << "-- Between them they selected " << r_rooms.size() << " rooms, ";
+    std::cout << "-- There are " << people.size() << " people in the ballot.\n";
+    std::cout << "-- Between them they selected " << rooms.size() << " rooms, ";
 
-    auto is_hostel = [&](RealRoom const& room) -> bool {
-        if (args.run.hostels) {
+    auto is_hostel = [&](Room const& room) -> bool {
+        if (args.run.hostels && room) {
             for (auto&& prefix : *args.run.hostels) {
-                if (room.starts_with(prefix)) {
+                if (room->starts_with(prefix)) {
                     return true;
                 }
             }
@@ -74,7 +75,8 @@ int main(int argc, char* argv[]) {
     };
 
     std::size_t count = 0;
-    for (auto&& room : r_rooms) {
+
+    for (auto&& room : rooms) {
         if (is_hostel(room)) {
             ++count;
         }
@@ -83,42 +85,40 @@ int main(int argc, char* argv[]) {
     std::cout << "of which " << count << " are hostels.\n";
 
     // Must sort as we kick the (numerically highest) priority, must use stable sort for
-    // implementation inter-compatibility.
-    std::stable_sort(
-        r_people.begin(), r_people.end(), [](RealPerson const& a, RealPerson const& b) {
-            return a.priority < b.priority;
-        });
+    // implementation inter-compatibility. All currently valid so can deference :)
+    std::stable_sort(people.begin(), people.end(), [](Person const& a, Person const& b) {
+        return a->priority < b->priority;
+    });
 
-    std::vector<std::pair<RealPerson, Room>> results{};
+    std::vector<std::pair<Person, Room>> results{};
 
     // Need to remove the people who missed the ballot
     if (args.run.max_rooms) {
         std::cout << "-- You want to limit the number of rooms to " << *args.run.max_rooms << '\n';
     }
-    while (args.run.max_rooms && r_people.size() > *args.run.max_rooms) {
-        results.emplace_back(std::move(r_people.back()), Kicked{});
-        r_people.pop_back();
+    while (!people.empty() && args.run.max_rooms && people.size() > *args.run.max_rooms) {
+        results.emplace_back(std::move(people.back()), std::nullopt);
+        people.pop_back();
     }
 
-    // Convert to variants
-    std::vector people = convert_vector<Person>(std::move(r_people));
-    std::vector rooms = convert_vector<Room>(std::move(r_rooms));
-
     // For every real person we need the possibility of them being kicked off the ballot
-    rooms.resize(people.size() + rooms.size(), Kicked{});
+    rooms.resize(people.size() + rooms.size(), std::nullopt);
 
     // Must pad people (always more than rooms) with null people for balanced assignment
-    people.resize(rooms.size(), NullPerson{});
+    people.resize(rooms.size(), std::nullopt);
 
     linear_assignment(people, rooms, [&](Person const& p, Room const& r) {
         return cost_function(p, r, is_hostel);
     });
 
+    // Build results
     for (std::size_t i = 0; i < people.size(); i++) {
-        match(people[i], rooms[i])(
-            [&](RealPerson& p, auto& r) { results.emplace_back(std::move(p), std::move(r)); },
-            [&](NullPerson&, auto&) {});
+        results.emplace_back(std::move(people[i]), std::move(rooms[i]));
     }
+
+    // All moved from, should tidy
+    people.clear();
+    rooms.clear();
 
     if (args.run.has_value()) {
         write_results(results, args);
