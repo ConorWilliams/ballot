@@ -19,40 +19,68 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
-int main(int argc, char* argv[]) {
-    // Automagically parses
-    Args args{argc, argv};
-
-    std::cout << "-- Welcome to the Churchill MCR's room-ballot code!\n\n";
-
-    std::vector<Person> people;
-    std::vector<Room> rooms;
-
-    if (args.cycle.has_value()) {
-        people = parse_people(args.cycle.in_people);
-
-        for (auto&& k : args.cycle.ks) {
-            report_k_cycles(k, people);
+std::vector<Person> load_people(Args& args) {
+    if (args.verify.has_value()) {
+        std::vector<Person> people{};
+        {
+            std::ifstream file(*args.verify.in_public);
+            cereal::JSONInputArchive archive(file);
+            archive(args.run.max_rooms, args.run.hostels, people);
         }
-
-        return 0;
-    } else if (args.verify.has_value()) {
-        std::ifstream file(*args.verify.in_public);
-        cereal::JSONInputArchive archive(file);
-        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+        return people;
     } else {
-        people = parse_people(args.run.in_people);
-        rooms = find_rooms(people);
+        std::vector people = parse_people(args.run.in_people);
 
         shuffle(people);  // Must randomise for fair ties break AND anonymity
 
         // Output for future verification
         std::ofstream file(*args.run.out_public);
         cereal::JSONOutputArchive archive(file);
-        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+        archive(args.run.max_rooms, args.run.hostels, people);
+
+        return people;
+    }
+}
+
+int main(int argc, char* argv[]) {
+    // Automagically parses
+    Args args{argc, argv};
+
+    std::cout << "-- Welcome to the Churchill MCR's room-ballot code!\n\n";
+
+    if (args.cycle.has_value()) {
+        std::vector people = parse_people(args.cycle.in_people);
+
+        for (auto&& k : args.cycle.ks) {
+            report_k_cycles(k, people);
+        }
+        return 0;
     }
 
+    std::vector people = load_people(args);
+
     std::cout << "-- There are " << people.size() << " people in the ballot.\n";
+
+    // Must sort as we kick the (numerically highest) priority, use stable sort for
+    // implementation inter-compatibility. All currently valid so can deference :)
+    std::stable_sort(people.begin(), people.end(), [](Person const& a, Person const& b) {
+        return a->priority < b->priority;
+    });
+
+    // Final people:room pairs stored here.
+    std::vector<std::pair<Person, Room>> results{};
+
+    // Need to remove the people who missed the ballot
+    if (args.run.max_rooms) {
+        std::cout << "-- You want to limit the number of rooms to " << *args.run.max_rooms << '\n';
+    }
+    while (!people.empty() && args.run.max_rooms && people.size() > *args.run.max_rooms) {
+        results.emplace_back(std::move(people.back()), std::nullopt);
+        people.pop_back();
+    }
+
+    std::vector rooms = find_rooms(people);
+
     std::cout << "-- Between them they selected " << rooms.size() << " rooms, ";
 
     auto is_hostel = [&](Room const& room) -> bool {
@@ -75,23 +103,6 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "of which " << count << " are hostels.\n";
-
-    std::vector<std::pair<Person, Room>> results{};
-
-    // Must sort as we kick the (numerically highest) priority, use stable sort for
-    // implementation inter-compatibility. All currently valid so can deference :)
-    std::stable_sort(people.begin(), people.end(), [](Person const& a, Person const& b) {
-        return a->priority < b->priority;
-    });
-
-    // Need to remove the people who missed the ballot
-    if (args.run.max_rooms) {
-        std::cout << "-- You want to limit the number of rooms to " << *args.run.max_rooms << '\n';
-    }
-    while (!people.empty() && args.run.max_rooms && people.size() > *args.run.max_rooms) {
-        results.emplace_back(std::move(people.back()), std::nullopt);
-        people.pop_back();
-    }
 
     // For every real person we need the possibility of them being kicked off the ballot
     rooms.resize(people.size() + rooms.size(), std::nullopt);
