@@ -113,7 +113,7 @@ void write_results(std::vector<std::pair<Person, Room>> const&, Args const&);
 void highlight_results(std::vector<std::pair<Person, Room>> const&, Args const&);
 
 template <typename F>
-inline void analayse(std::vector<std::pair<Person, Room>> const& results, F&& is_hostel) {
+void analayse(std::vector<std::pair<Person, Room>> const& results, F&& is_hostel) {
     std::size_t count_normal = 0;
     std::size_t count_hostel = 0;
     std::size_t count_kicked = 0;

@@ -21,29 +21,6 @@
 #include "cost.hpp"
 #include "lapjv.hpp"
 
-std::pair<std::vector<Person>, std::vector<Room>> load_data(Args& args) {
-    std::vector<Person> people;
-    std::vector<Room> rooms;
-
-    if (args.verify.has_value()) {
-        std::ifstream file(*args.verify.in_public);
-        cereal::JSONInputArchive archive(file);
-        archive(args.run.max_rooms, args.run.hostels, people, rooms);
-    } else {
-        people = parse_people(args.run.in_people);
-        rooms = find_rooms(people);
-
-        shuffle(people);  // Must randomise for fair ties break AND anonymity
-
-        // Output for future checking
-        std::ofstream file(*args.run.out_public);
-        cereal::JSONOutputArchive archive(file);
-        archive(args.run.max_rooms, args.run.hostels, people, rooms);
-    }
-
-    return {std::move(people), std::move(rooms)};
-}
-
 int main(int argc, char* argv[]) {
     // Automagically parses
     Args args{argc, argv};
@@ -58,7 +35,24 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    auto [people, rooms] = load_data(args);
+    std::vector<Person> people;
+    std::vector<Room> rooms;
+
+    if (args.verify.has_value()) {
+        std::ifstream file(*args.verify.in_public);
+        cereal::JSONInputArchive archive(file);
+        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+    } else {
+        people = parse_people(args.run.in_people);
+        rooms = find_rooms(people);
+
+        shuffle(people);  // Must randomise for fair ties break AND anonymity
+
+        // Output for future verification
+        std::ofstream file(*args.run.out_public);
+        cereal::JSONOutputArchive archive(file);
+        archive(args.run.max_rooms, args.run.hostels, people, rooms);
+    }
 
     std::cout << "-- There are " << people.size() << " people in the ballot.\n";
     std::cout << "-- Between them they selected " << rooms.size() << " rooms, ";
@@ -84,13 +78,13 @@ int main(int argc, char* argv[]) {
 
     std::cout << "of which " << count << " are hostels.\n";
 
-    // Must sort as we kick the (numerically highest) priority, must use stable sort for
+    std::vector<std::pair<Person, Room>> results{};
+
+    // Must sort as we kick the (numerically highest) priority, use stable sort for
     // implementation inter-compatibility. All currently valid so can deference :)
     std::stable_sort(people.begin(), people.end(), [](Person const& a, Person const& b) {
         return a->priority < b->priority;
     });
-
-    std::vector<std::pair<Person, Room>> results{};
 
     // Need to remove the people who missed the ballot
     if (args.run.max_rooms) {
@@ -116,9 +110,7 @@ int main(int argc, char* argv[]) {
         results.emplace_back(std::move(people[i]), std::move(rooms[i]));
     }
 
-    // All moved from, should tidy
-    people.clear();
-    rooms.clear();
+    // NOTE : people, rooms are All moved from
 
     if (args.run.has_value()) {
         write_results(results, args);

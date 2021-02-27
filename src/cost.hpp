@@ -23,10 +23,10 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
     constexpr double kick_cost = 2;  // Must be less than big_num
 
     /*  */ if (p && r) {
-        // For scaling inverse hyperbolic tangent
-
         if (std::optional i = p->choice_index(*r)) {
+            // For scaling inverse hyperbolic tangent
             double coef = atanh(bias_fist) / (std::max(1ul, p->pref.size() - 1));
+            // Bias hostel choices
             double non_hostel_penalty = is_hostel(r) ? 0.0 : 0.5;
 
             // Cost of assigning person to room they DO want.  Ensure: 0 < cost <= 1
