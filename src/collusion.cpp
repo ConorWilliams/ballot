@@ -36,32 +36,31 @@ void report_k_cycles(std::size_t k, std::vector<Person> const& people) {
         }
     }
 
-    std::cout << "-- Scanning for " << k << "-cycles:\n";
+    // Find longest name for pretty print
+    std::size_t w = 0;
+
+    for (auto&& p : first_k) {
+        w = std::max(w, p.name.size());
+    }
 
     for (auto it = first_k.begin(); it != first_k.end();) {
-        auto nx = std::partition(it, first_k.end(), [s = it->sub_pref](auto const& x) {  //
-            return x.sub_pref == s;
+        auto end = std::partition(it, first_k.end(), [s = *it](auto const& x) {  //
+            return x.sub_pref == s.sub_pref;
         });
 
-        if (nx - it >= static_cast<std::ptrdiff_t>(k)) {
-            // Find longest name for pretty print
-            std::size_t w = 0;
-
-            for (auto ix = it; ix != nx; ++ix) {
-                w = std::max(w, ix->name.size());
-            }
-
-            // Report all choices
-            for (auto ix = it; ix != nx; ++ix) {
+        if (end - it >= static_cast<std::ptrdiff_t>(k)) {
+            // Report choices
+            for (auto ix = it; ix != end; ++ix) {
                 std::cout << "--" << std::right << std::setw(w + 2) << ix->name << " : ";
-                for (auto&& room : ix->pref) {
-                    std::cout << std::left << std::setw(5) << room;
+                for (std::size_t i = 0; i < k; i++) {
+                    std::cout << std::left << std::setw(5) << ix->pref[i];
                 }
+
                 std::cout << '\n';
             }
             std::cout << "--\n";
         }
 
-        it = nx;
+        it = end;
     }
 }
