@@ -57,13 +57,11 @@ The ballot code formulates the task as solving the balanced linear [assignment p
 
 In order to allow the possibility that all students get kicked off the ballot the list of rooms is augmented with p (the number of people) "kicked-rooms". To ensure balanced assignment, preference-free null-people are appended to the list of people. 
 
-If the total number of allocated rooms needs to be limited this is modelled through the introduction of anti-people which preferentially bind to real-rooms more strongly than any student.   
+If the total number of allocated rooms needs to be limited the lowest priority students are removed from the ballot.  
 
 ### The cost function
 
-In summary, the cost function prioritises people getting their first choices but prefers kicking people off the ballot to assigning them to a room they didn't want. Additionally, the cost of kicking people decreases as their priority number increases. This should preferentially kick 3rd/4th year students when rooms are limited.
-
-Finally the cost function ensures all houses designated as "hostels" are preferentially filled.
+In summary, the cost function prioritises people getting their first choices but prefers kicking people off the ballot to assigning them to a room they didn't want. Finally, the cost function ensures all houses designated as "hostels" are preferentially filled.
 
 
  

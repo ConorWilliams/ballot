@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(
     ChuBallotMCR
-    VERSION 1.2
+    VERSION 2.0
     DESCRIPTION "Code for the Churchill MCR Postgrad room-ballot"
     LANGUAGES CXX
 )
