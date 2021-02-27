@@ -23,20 +23,18 @@ int main(int argc, char* argv[]) {
     // Automagically parses
     Args args{argc, argv};
 
+    std::vector<Person> people;
+    std::vector<Room> rooms;
+
     if (args.cycle.has_value()) {
-        std::vector people = parse_people(args.cycle.in_people);
+        people = parse_people(args.cycle.in_people);
 
         for (auto&& k : args.cycle.ks) {
             report_k_cycles(k, people);
         }
 
         return 0;
-    }
-
-    std::vector<Person> people;
-    std::vector<Room> rooms;
-
-    if (args.verify.has_value()) {
+    } else if (args.verify.has_value()) {
         std::ifstream file(*args.verify.in_public);
         cereal::JSONInputArchive archive(file);
         archive(args.run.max_rooms, args.run.hostels, people, rooms);
