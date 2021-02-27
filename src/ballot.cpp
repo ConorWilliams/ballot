@@ -6,13 +6,9 @@
 
 #include "ballot.hpp"
 
-#include <algorithm>
-#include <cstdlib>
-#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
-#include <optional>
 #include <random>
 #include <set>
 #include <sstream>
@@ -31,12 +27,12 @@ namespace {  // Like static
 
 constexpr char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-std::random_device true_rng;
+std::random_device true_rng{};
 
 // Generate a random string of characters for salting names before hash
-std::string random_string(std::size_t len = 32) {
+std::string random_string() {
     std::string out;
-    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), len, true_rng);
+    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), 32, true_rng);
     return out;
 }
 
@@ -82,7 +78,7 @@ std::vector<Person> parse_people(std::string const& fname) {
 
         picosha2::hash256_hex_string(real_p.name + random_string(), real_p.secret_name);
 
-        people.push_back(std::move(real_p));
+        people.emplace_back(std::move(real_p));
     }
 
     // Verify all people have made the same number of choices and that there is at least one person.

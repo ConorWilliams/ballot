@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <bits/c++config.h>
-
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -78,7 +76,7 @@ struct Person {
     std::vector<std::string> pref{};
     std::string secret_name{};
 
-    std::optional<std::size_t> choice_index(std::string const& r) const {
+    [[nodiscard]] std::optional<std::size_t> choice_index(std::string const& r) const {
         for (std::size_t i = 0; i < pref.size(); i++) {
             if (pref[i] == r) {
                 return i;
