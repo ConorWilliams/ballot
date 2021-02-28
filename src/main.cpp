@@ -18,6 +18,7 @@
 #include "collusion.hpp"
 #include "cost.hpp"
 #include "lapjv.hpp"
+#include "secrets.hpp"
 
 std::vector<Person> load_people(Args& args) {
     if (args.verify.has_value()) {
@@ -31,7 +32,7 @@ std::vector<Person> load_people(Args& args) {
     } else {
         std::vector people = parse_people(args.run.in_people);
 
-        shuffle(people);  // Must randomise for fair ties break AND anonymity
+        anonymise_sort(people);
 
         // Output for future verification
         std::ofstream file(*args.run.out_public);

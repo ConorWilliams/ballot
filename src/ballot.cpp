@@ -6,10 +6,11 @@
 
 #include "ballot.hpp"
 
+#include <bits/c++config.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iterator>
-#include <random>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -21,24 +22,6 @@
 
 #include "csv2/parameters.hpp"
 #include "csv2/reader.hpp"
-#include "picosha2.h"
-
-namespace {  // Like static
-
-constexpr char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-std::random_device true_rng{};
-
-// Generate a random string of characters for salting names before hash
-std::string random_string() {
-    std::string out;
-    std::sample(std::begin(charset), std::end(charset), std::back_inserter(out), 32, true_rng);
-    return out;
-}
-
-}  // namespace
-
-void shuffle(std::vector<Person>& people) { std::shuffle(people.begin(), people.end(), true_rng); }
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(std::string const& fname) {
@@ -75,8 +58,6 @@ std::vector<Person> parse_people(std::string const& fname) {
                     real_p.pref.push_back(buff);
             }
         }
-
-        picosha2::hash256_hex_string(real_p.name + random_string(), real_p.secret_name);
 
         people.emplace_back(std::move(real_p));
     }
@@ -119,16 +100,11 @@ std::vector<Room> find_rooms(std::vector<Person> const& people) {
 }
 
 void write_results(std::vector<std::pair<Person, Room>> const& result, Args const& args) {
-    // Orders results for pretty printing
-
-    auto sorted = result;
-    std::sort(sorted.begin(), sorted.end());
-
     // Find longest name
     std::size_t w = [&] {
         std::size_t w = 0;
 
-        for (auto&& [person, room] : sorted) {
+        for (auto&& [person, room] : result) {
             if (person) {
                 w = std::max(person->name.size(), w);
             }
@@ -137,7 +113,9 @@ void write_results(std::vector<std::pair<Person, Room>> const& result, Args cons
         return w;
     }();
 
-    for (std::ofstream fstream{*args.run.out_secret}; auto&& [person, room] : sorted) {
+    std::size_t i = 0;
+
+    for (std::ofstream fstream{*args.run.out_secret}; auto&& [person, room] : result) {
         if (person) {
             fstream << std::left << std::setw(w + 2) << person->name;
             fstream << std::left << std::setw(18) << "," + person->crsid;
@@ -155,7 +133,9 @@ void write_results(std::vector<std::pair<Person, Room>> const& result, Args cons
                 fstream << std::left << std::setw(6) << ",KICK";
             }
 
-            fstream << ',' << person->secret_name << '\n';
+            fstream << std::left << std::setw(4) << "," + std::to_string(i++);
+
+            fstream << ',' << person->one_time_pad << '\n';
         }
     }
 }

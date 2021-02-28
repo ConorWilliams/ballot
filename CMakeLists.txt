@@ -66,7 +66,7 @@ CPMAddPackage(
 CPMAddPackage(
     NAME PicoSHA2
     GITHUB_REPOSITORY okdshin/PicoSHA2
-    VERSION 1.0.0
+    GIT_TAG b699e6c900be6e00152db5a3d123c1db42ea13d0
 )
 if(PicoSHA2_ADDED)
     add_library(PicoSHA2 INTERFACE IMPORTED)
@@ -76,7 +76,7 @@ endif()
 
 # ---- Create executable ----
 
-set(sources "src/main.cpp" "src/ballot.cpp" "src/collusion.cpp")
+set(sources "src/main.cpp" "src/ballot.cpp" "src/collusion.cpp" "src/secrets.cpp")
 
 add_executable(ballot ${sources})
 

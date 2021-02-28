@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <bits/c++config.h>
+
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -71,10 +73,15 @@ namespace impl {
 
 struct Person {
     std::string name{};
+
     std::string crsid{};
+
     std::size_t priority = 1;
     std::vector<std::string> pref{};
     std::string secret_name{};
+
+    std::string one_time_pad{};
+    std::size_t index{};
 
     [[nodiscard]] std::optional<std::size_t> choice_index(std::string const& r) const {
         for (std::size_t i = 0; i < pref.size(); i++) {
@@ -85,11 +92,11 @@ struct Person {
         return std::nullopt;
     }
 
-    template <class Archive> void serialize(Archive& archive) {
-        archive(secret_name, pref, priority);
-    }
+    friend bool operator<(Person const& a, Person const& b) { return a.name < b.name; }
 
-    auto operator<=>(const Person&) const = default;
+    template <class Archive> void serialize(Archive& archive) {
+        archive(priority, pref, secret_name);
+    }
 };
 
 }  // namespace impl
@@ -102,8 +109,6 @@ using Room = std::optional<std::string>;
 std::vector<Person> parse_people(std::string const&);
 
 std::vector<Room> find_rooms(std::vector<Person> const&);
-
-void shuffle(std::vector<Person>&);
 
 void write_results(std::vector<std::pair<Person, Room>> const&, Args const&);
 
