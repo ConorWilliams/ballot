@@ -6,8 +6,6 @@
 
 #include "ballot.hpp"
 
-#include <bits/c++config.h>
-
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -22,6 +20,7 @@
 
 #include "csv2/parameters.hpp"
 #include "csv2/reader.hpp"
+#include "secrets.hpp"
 
 // Reads csv-file, expects header and columns: name, crsid, priority, choice 1, ..., choice n
 std::vector<Person> parse_people(std::string const& fname) {
@@ -133,33 +132,33 @@ void write_results(std::vector<std::pair<Person, Room>> const& result, Args cons
                 fstream << std::left << std::setw(6) << ",KICK";
             }
 
-            fstream << std::left << std::setw(4) << "," + std::to_string(i++);
+            fstream << std::left << std::setw(5) << "," + std::to_string(i);
 
             fstream << ',' << person->one_time_pad << '\n';
         }
+        i += 1;
     }
 }
 
 void highlight_results(std::vector<std::pair<Person, Room>> const& results, Args const& args) {
-    for (auto&& [person, room] : results) {
-        if (person && person->secret_name == args.verify.secret_name) {
-            std::cout << "-- Your choices :";
+    auto&& [person, room] = results[args.verify.index];
 
-            for (std::string_view room : person->pref) {
-                std::cout << ' ' << room;
-            }
+    std::cout << "-- Your name is : ";
+    std::cout << string_xor(person->secret_name, args.verify.one_time_pad) << '\n';
 
-            std::cout << "\n-- Your priority: " << person->priority;
+    std::cout << "-- Your choices :";
 
-            if (room) {
-                std::cout << "\n-- You got room : " << *room << '\n';
-            } else {
-                std::cout << "\n-- You got KICKED\n";
-            }
-
-            return;
-        }
+    for (std::string_view room : person->pref) {
+        std::cout << ' ' << room;
     }
-    throw std::invalid_argument("secret_name: \"" + args.verify.secret_name + "\" not in "
-                                + *args.verify.in_public);
+
+    std::cout << "\n-- Your priority: " << person->priority;
+
+    if (room) {
+        std::cout << "\n-- You got room : " << *room << '\n';
+    } else {
+        std::cout << "\n-- You got KICKED\n";
+    }
+
+    return;
 }

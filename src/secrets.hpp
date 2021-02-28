@@ -8,4 +8,6 @@
 
 #include "ballot.hpp"
 
+std::string string_xor(std::string const&, std::string const&);
+
 void anonymise_sort(std::vector<Person>&);

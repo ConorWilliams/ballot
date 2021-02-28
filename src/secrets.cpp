@@ -32,6 +32,8 @@ std::string random_string(std::size_t len) {
     return out;
 }
 
+}  // namespace
+
 std::string string_xor(std::string const& a, std::string const& b) {
     assert(a.size() == b.size());
 
@@ -43,8 +45,6 @@ std::string string_xor(std::string const& a, std::string const& b) {
 
     return out;
 }
-
-}  // namespace
 
 // Here we want to deterministically "randomise" the order of the people and encrypt their names
 void anonymise_sort(std::vector<Person>& people) {

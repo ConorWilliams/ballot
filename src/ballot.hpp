@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <bits/c++config.h>
-
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -25,7 +23,8 @@
 
 struct Args {
     struct Verify : structopt::sub_command {
-        std::string secret_name;                                      // Verifies this name
+        std::size_t index;
+        std::string one_time_pad;                                     // Verifies this name
         std::optional<std::string> in_public = "public_ballot.json";  // Public ballot file
     };
 
@@ -59,7 +58,7 @@ struct Args {
     Cycle cycle;
 };
 
-STRUCTOPT(Args::Verify, secret_name, in_public);
+STRUCTOPT(Args::Verify, index, one_time_pad);
 STRUCTOPT(Args::Run, in_people, out_secret, out_public, max_rooms, hostels);
 STRUCTOPT(Args::Cycle, in_people, ks);
 
