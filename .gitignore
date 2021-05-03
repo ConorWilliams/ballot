@@ -3,6 +3,7 @@ build
 compile_commands.json
 data
 .clangd
+.cache
 .vscode
 example/*ballot*
 

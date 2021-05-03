@@ -76,8 +76,8 @@ void anonymise_sort(std::vector<Person>& people) {
         }
     }
 
-    // Sort so results cannot be determined by input sequence
-    std::sort(people.begin(), people.end());
+    // Sort so results cannot be determined by input sequence ordering
+    std::stable_sort(people.begin(), people.end());
 
     // Build seed deterministically
     std::string entropy;

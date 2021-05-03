@@ -40,7 +40,7 @@ template <typename F> double cost_function(Person const& p, Room const& r, F&& i
         // Justification:
         //     Preferable (therefore less than) cost of assigning to unwanted room.
         //     Kicking off ballot should be as close to the cost of getting last choice as this
-        //     disincentivizes people choosing lots of honey-pot rooms however, this conflicts
+        //     disincentivises people choosing lots of honey-pot rooms however, this conflicts
         //     with desire to reduce kicking.
         return kick_cost;
     } else {

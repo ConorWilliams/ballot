@@ -33,7 +33,7 @@ First up you're your going to need a csv file containing everyone's room prefere
 
  `../build/ballot run example.csv`
 
-This will generate two files `public_ballot.json` and `secret_ballot.csv`. The first can be distributed and used by members of the MCR to anonymously verify the ballot was run fairly. The second contains the room assignments and some additional info. You should email each student their result and their "secret_name" (last field in `secret_ballot.csv`).
+This will generate two files `public_ballot.json` and `secret_ballot.csv`. The first can be distributed and used by members of the MCR to anonymously verify the ballot was run fairly. The second contains the room assignments and some additional info. You should email each student their result, "id" and "secret_name" (last three fields in `secret_ballot.csv` respectively).
 
 If you would like to encourage particular rooms to fill up (e.g. the hostels) then you can pass in a list of prefixes, for example: 
 
@@ -45,11 +45,11 @@ Finally you can control the total number of allocated rooms using the `-m` or `-
 
 ## Verifying the ballot
 
-To verify the MCR computing officer hasn't fiddled your position you need a copy of the `public_ballot.json` file they generated and and your "secret_name" which you should have received securely. Now run:
+To verify the MCR computing officer hasn't fiddled your position you need a copy of the `public_ballot.json` file they generated, your "id" and "secret_name" which you should have received securely. Now run:
 
-`./ballot verify YOUR_SECRET_NAME `
+`./ballot verify YOUR_ID YOUR_SECRET_NAME`
 
-where you can supply the optional flag `-i /path/to/public_ballot.json` to specify the location of the public ballot file.
+where you can supply the optional flag `-i /path/to/public_ballot.json` to specify the location of the public ballot file if it is not in your current working directory.
 
 ## Details about the ballot
 

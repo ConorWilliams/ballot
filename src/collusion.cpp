@@ -15,16 +15,12 @@
 
 #include "ballot.hpp"
 
-namespace {
-
-struct AugPerson : impl::Person {
-    std::set<std::string> sub_pref;
-};
-
-}  // namespace
-
 void report_k_cycles(std::size_t k, std::vector<Person> const& people) {
     //
+    struct AugPerson : impl::Person {
+        std::set<std::string> sub_pref;
+    };
+
     std::vector<AugPerson> first_k;
 
     for (auto&& p : people) {
@@ -44,6 +40,7 @@ void report_k_cycles(std::size_t k, std::vector<Person> const& people) {
     }
 
     for (auto it = first_k.begin(); it != first_k.end();) {
+        //
         auto end = std::partition(it, first_k.end(), [s = *it](auto const& x) {  //
             return x.sub_pref == s.sub_pref;
         });
