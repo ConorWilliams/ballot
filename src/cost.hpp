@@ -18,19 +18,20 @@
 // Cost function - overall cost is minimised
 template <typename F> double cost_function(Person const& p, Room const& r, F&& is_hostel) {
     // Constants
-    constexpr double bias_fist = 0.95;  // In (0,1)
-    constexpr double big_num = 100;
-    constexpr double kick_cost = 2;  // Must be less than big_num
+    constexpr double bias_fist = 0.95;    // In (0,1)
+    constexpr double big_num = 100;       // Sufficiently large
+    constexpr double kick_cost = 3;       // Must be less than big_num
+    constexpr double p_weight = 1. / 3.;  // Such that >6 terms (2 years) flattens
 
     /*  */ if (p && r) {
         if (std::optional i = p->choice_index(*r)) {
             // For scaling inverse hyperbolic tangent
             double coef = atanh(bias_fist) / (std::max(1ul, p->pref.size() - 1));
             // Bias hostel choices
-            double non_hostel_penalty = is_hostel(r) ? 0.0 : 0.5;
+            double non_hostel_penalty = is_hostel(r) ? 0.0 : 2 * std::tanh(p->priority * p_weight);
 
-            // Cost of assigning person to room they DO want.  Ensure: 0 < cost <= 1
-            return 0.5 * std::tanh(*i * coef) / bias_fist + non_hostel_penalty;
+            // Cost of assigning person to room they DO want.  Ensure: 0 < cost <= Kick_cost
+            return std::tanh(*i * coef) / bias_fist + non_hostel_penalty;
         } else {
             // Cost of assigning person to room they DO-NOT want, justification:
             //     Bigger than the maximum expected number of players such that it never occurs.
