@@ -158,27 +158,31 @@ void analayse(std::vector<std::pair<Person, Room>> const& results, F&& is_hostel
 
     std::cout << "   | Choice |";
     for (std::size_t i = 0; i < p_max + 1; i++) {
-        std::cout << " P" << i << " |";
+        if (i < 10) {
+            std::cout << "  P" << i << " |";
+        } else {
+            std::cout << " P" << i << " |";
+        }
     }
     std::cout << '\n';
 
     std::cout << "   |--------|";
     for (std::size_t i = 0; i < p_max + 1; i++) {
-        std::cout << "----|";
+        std::cout << "-----|";
     }
     std::cout << '\n';
 
     for (auto&& [choice, v] : arr) {
         std::cout << "   |" << std::right << std::setw(7) << choice + 1 << " |";
         for (auto&& count : v) {
-            std::cout << std::right << std::setw(3) << count << " |";
+            std::cout << std::right << std::setw(4) << count << " |";
         }
         std::cout << '\n';
     }
 
     std::cout << "   |" << std::right << std::setw(9) << "Kicked |";
     for (auto&& count : kicked) {
-        std::cout << std::right << std::setw(3) << count << " |";
+        std::cout << std::right << std::setw(4) << count << " |";
     }
     std::cout << "\n\n";
 }
